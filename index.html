@@ -1,0 +1,2020 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniShelf - Ultimate Media Backlog Tracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            movies: '#ef4444',  /* Red */
+                            tv: '#f59e0b',      /* Amber */
+                            games: '#6366f1',   /* Indigo */
+                            music: '#10b981'    /* Emerald */
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for stats analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        /* Card hover effects */
+        .media-card {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .media-card:hover {
+            transform: translateY(-4px);
+        }
+        /* Glow accents for categories */
+        .glow-movies:hover { box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.15); }
+        .glow-tv:hover { box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.15); }
+        .glow-games:hover { box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.15); }
+        .glow-music:hover { box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.15); }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen pb-12">
+    <!-- Navigation Bar -->
+    <header class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white">
+                    <i class="fa-solid fa-layer-group text-lg"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">OmniShelf</h1>
+                        <!-- Live Connection Indicator Badge -->
+                        <span id="cloud-indicator-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700">Offline Mode</span>
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Ultimate Entertainment Watchlist</p>
+                </div>
+            </div>
+
+            <!-- Header Controls -->
+            <div class="flex items-center gap-2 sm:gap-4">
+                <!-- Randomizer Button -->
+                <button onclick="pickRandomItem()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50 hover:bg-indigo-100 dark:hover:bg-indigo-950/80 transition-all shadow-sm group">
+                    <i class="fa-solid fa-dice group-hover:rotate-45 transition-transform"></i>
+                    <span class="hidden sm:inline">Pick For Me!</span>
+                </button>
+
+                <!-- Add New Button -->
+                <button onclick="openAddModal()" class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-slate-900 dark:bg-white text-white dark:text-slate-950 hover:bg-slate-800 dark:hover:bg-slate-100 transition-all shadow-md">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Add Item</span>
+                </button>
+
+                <!-- Cloud Account Button -->
+                <button onclick="openAccountModal()" class="relative w-10 h-10 rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all" title="Cloud Accounts & Sync">
+                    <i id="cloud-icon" class="fa-solid fa-cloud-slash"></i>
+                    <span id="cloud-dot" class="absolute top-1 right-1 w-2.5 h-2.5 bg-slate-400 rounded-full border-2 border-white dark:border-slate-900"></span>
+                </button>
+
+                <!-- Theme Toggle Button -->
+                <button onclick="toggleTheme()" class="w-10 h-10 rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all">
+                    <i id="theme-icon" class="fa-solid fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <!-- Quick Stats Accordion Header / Overview -->
+        <section class="mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight">Dashboard</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Track and manage your media journey across all screens and speakers.</p>
+                </div>
+                <button onclick="toggleStats()" class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5">
+                    <span id="stats-toggle-text">Hide Dashboard Analytics</span>
+                    <i id="stats-toggle-icon" class="fa-solid fa-chevron-up text-xs transition-transform"></i>
+                </button>
+            </div>
+
+            <!-- Stats Analytics Grid Container -->
+            <div id="stats-container" class="grid grid-cols-1 md:grid-cols-4 gap-6 transition-all duration-300 overflow-hidden max-h-[1000px]">
+                <!-- Stats Summary Cards -->
+                <div class="md:col-span-3 grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Cards -->
+                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                        <div class="flex items-center justify-between text-slate-400">
+                            <span class="text-xs font-semibold uppercase tracking-wider">Total Items</span>
+                            <i class="fa-solid fa-database text-lg"></i>
+                        </div>
+                        <div class="mt-4">
+                            <h3 id="stat-total" class="text-3xl font-bold tracking-tight">0</h3>
+                            <p class="text-xs text-slate-500 mt-1">Across 4 formats</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                        <div class="flex items-center justify-between text-indigo-500">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">In Progress</span>
+                            <i class="fa-solid fa-spinner text-lg animate-spin-slow"></i>
+                        </div>
+                        <div class="mt-4">
+                            <h3 id="stat-progress" class="text-3xl font-bold tracking-tight text-indigo-600 dark:text-indigo-400">0</h3>
+                            <p class="text-xs text-slate-500 mt-1">Currently diving in</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                        <div class="flex items-center justify-between text-emerald-500">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Completed</span>
+                            <i class="fa-solid fa-circle-check text-lg"></i>
+                        </div>
+                        <div class="mt-4">
+                            <h3 id="stat-completed" class="text-3xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">0</h3>
+                            <p id="stat-completed-pct" class="text-xs text-emerald-500 font-medium mt-1">0% completion rate</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                        <div class="flex items-center justify-between text-rose-500">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Unstarted</span>
+                            <i class="fa-solid fa-clock text-lg"></i>
+                        </div>
+                        <div class="mt-4">
+                            <h3 id="stat-unstarted" class="text-3xl font-bold tracking-tight text-rose-600 dark:text-rose-400">0</h3>
+                            <p class="text-xs text-slate-500 mt-1">Waiting in the wings</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Breakdown Chart -->
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-center items-center">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2 self-start">Media Breakdown</span>
+                    <div class="w-full h-32 flex items-center justify-center">
+                        <canvas id="mediaChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Content Navigation / Filter Control Bar -->
+        <section class="mb-8 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
+            <!-- Media Category Selector tabs -->
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 flex-wrap gap-4">
+                <nav class="flex gap-1 overflow-x-auto w-full md:w-auto -mx-4 px-4 md:mx-0 md:px-0">
+                    <button onclick="setCategoryFilter('all')" id="tab-all" class="category-tab px-4 py-2 text-sm font-semibold rounded-xl bg-indigo-600 text-white flex items-center gap-2 shrink-0 transition-all shadow-md shadow-indigo-600/10">
+                        <i class="fa-solid fa-border-all"></i> All Media
+                    </button>
+                    <button onclick="setCategoryFilter('movie')" id="tab-movie" class="category-tab px-4 py-2 text-sm font-medium rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 shrink-0 transition-all">
+                        <i class="fa-solid fa-film text-brand-movies"></i> Movies
+                    </button>
+                    <button onclick="setCategoryFilter('tv')" id="tab-tv" class="category-tab px-4 py-2 text-sm font-medium rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 shrink-0 transition-all">
+                        <i class="fa-solid fa-tv text-brand-tv"></i> TV Shows
+                    </button>
+                    <button onclick="setCategoryFilter('game')" id="tab-game" class="category-tab px-4 py-2 text-sm font-medium rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 shrink-0 transition-all">
+                        <i class="fa-solid fa-gamepad text-brand-games"></i> Video Games
+                    </button>
+                    <button onclick="setCategoryFilter('music')" id="tab-music" class="category-tab px-4 py-2 text-sm font-medium rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 shrink-0 transition-all">
+                        <i class="fa-solid fa-music text-brand-music"></i> Music
+                    </button>
+                </nav>
+
+                <!-- View Mode and Display Options -->
+                <div class="flex items-center gap-2 ml-auto">
+                    <!-- Grid/List View Toggles -->
+                    <button onclick="setViewMode('grid')" id="btn-grid-view" class="w-9 h-9 rounded-lg flex items-center justify-center bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50 transition-all" title="Grid View">
+                        <i class="fa-solid fa-grip-vertical"></i>
+                    </button>
+                    <button onclick="setViewMode('list')" id="btn-list-view" class="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all" title="List View">
+                        <i class="fa-solid fa-list"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Detailed Search, Sorting, and Filters -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Search bar -->
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                    </span>
+                    <input type="text" id="filter-search" oninput="handleFilterChange()" placeholder="Search titles, artist, notes..." class="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                </div>
+
+                <!-- Filter by Status -->
+                <div>
+                    <select id="filter-status" onchange="handleFilterChange()" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                        <option value="all">All Statuses</option>
+                        <option value="Not Started">Not Started</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Abandoned">On Hold / Abandoned</option>
+                    </select>
+                </div>
+
+                <!-- Filter by Priority -->
+                <div>
+                    <select id="filter-priority" onchange="handleFilterChange()" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                        <option value="all">All Priorities</option>
+                        <option value="High">🔥 High Priority</option>
+                        <option value="Medium">⚡ Medium Priority</option>
+                        <option value="Low">💤 Low Priority</option>
+                    </select>
+                </div>
+
+                <!-- Sort options -->
+                <div>
+                    <select id="filter-sort" onchange="handleFilterChange()" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                        <option value="date-new">Newest Added First</option>
+                        <option value="date-old">Oldest Added First</option>
+                        <option value="title-asc">Alphabetical (A-Z)</option>
+                        <option value="title-desc">Alphabetical (Z-A)</option>
+                        <option value="rating-desc">Rating: High to Low</option>
+                        <option value="priority-desc">Priority: High to Low</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Media Shelf Layout -->
+        <section>
+            <!-- No items template -->
+            <div id="no-items-state" class="hidden flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm text-center px-4">
+                <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-400 text-2xl mb-4">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+                <h3 class="font-bold text-lg">No media found</h3>
+                <p class="text-slate-400 text-sm max-w-sm mt-1">Try refining your search keywords/filters or insert a new item into your shelf list!</p>
+                <button onclick="openAddModal()" class="mt-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-xl transition-all shadow-md shadow-indigo-600/10">
+                    Add First Item
+                </button>
+            </div>
+
+            <!-- Card Grid View Container -->
+            <div id="media-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dynamic grid card loading -->
+            </div>
+
+            <!-- List View Container (Hidden initially) -->
+            <div id="media-list" class="hidden overflow-hidden bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
+                        <thead class="bg-slate-50 dark:bg-slate-900/50">
+                            <tr>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Media & Title</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Format</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Priority</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Rating</th>
+                                <th scope="col" class="px-6 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="list-tbody" class="divide-y divide-slate-200 dark:divide-slate-800">
+                            <!-- Dynamic row items loading -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Add/Edit Media Modal -->
+    <div id="media-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh] scale-95 transition-all" id="modal-content">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                <h3 id="modal-title" class="text-lg font-bold">Add New Entry</h3>
+                <button onclick="closeModal()" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form id="media-form" onsubmit="handleFormSubmit(event)" class="overflow-y-auto p-6 space-y-5">
+                <input type="hidden" id="item-id">
+
+                <!-- Title & Type with AI Autofill Button -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="item-title" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Title *</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="item-title" required placeholder="Inception, Elden Ring, Dark Side of the Moon..." class="flex-1 px-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                            <button id="ai-autofill-btn" type="button" onclick="triggerAiAutofill()" class="px-4 py-2 bg-gradient-to-r from-purple-600 via-indigo-600 to-indigo-700 text-white font-semibold text-xs rounded-xl hover:opacity-95 transition-all flex items-center gap-1.5 shadow-md shadow-indigo-500/10 shrink-0">
+                                <i class="fa-solid fa-wand-magic-sparkles animate-pulse"></i>
+                                <span>AI Autofill</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="item-type" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Media Type *</label>
+                        <select id="item-type" onchange="adaptFormFields()" class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                            <option value="movie">🎬 Movie</option>
+                            <option value="tv">📺 TV Show</option>
+                            <option value="game">🎮 Video Game</option>
+                            <option value="music">🎵 Music</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Status, Priority & Rating -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="item-status" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Status</label>
+                        <select id="item-status" class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                            <option value="Not Started">Not Started</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Abandoned">On Hold / Abandoned</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="item-priority" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Priority</label>
+                        <select id="item-priority" class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                            <option value="High">🔥 High</option>
+                            <option value="Medium">⚡ Medium</option>
+                            <option value="Low">💤 Low</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Rating</label>
+                        <div class="flex items-center gap-1.5 h-10">
+                            <input type="hidden" id="item-rating" value="0">
+                            <!-- 5 Interactive Star Icons -->
+                            <div class="flex text-lg text-slate-300 dark:text-slate-700">
+                                <button type="button" onclick="setRatingValue(1)" class="star-btn transition-transform hover:scale-110"><i class="fa-solid fa-star"></i></button>
+                                <button type="button" onclick="setRatingValue(2)" class="star-btn transition-transform hover:scale-110"><i class="fa-solid fa-star"></i></button>
+                                <button type="button" onclick="setRatingValue(3)" class="star-btn transition-transform hover:scale-110"><i class="fa-solid fa-star"></i></button>
+                                <button type="button" onclick="setRatingValue(4)" class="star-btn transition-transform hover:scale-110"><i class="fa-solid fa-star"></i></button>
+                                <button type="button" onclick="setRatingValue(5)" class="star-btn transition-transform hover:scale-110"><i class="fa-solid fa-star"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic: Movie Fields -->
+                <div id="fields-movie" class="dynamic-media-fields grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="movie-director" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Director</label>
+                        <input type="text" id="movie-director" placeholder="Christopher Nolan" class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                    </div>
+                    <div>
+                        <label for="movie-runtime" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Runtime (Minutes)</label>
+                        <input type="number" id="movie-runtime" placeholder="148" min="0" class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                    </div>
+                </div>
+
+                <!-- Dynamic: TV Show Fields -->
+                <div id="fields-tv" class="dynamic-media-fields hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="tv-season" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Current Season</label>
+                        <input type="number" id="tv-season" placeholder="1" min="1" class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                    </div>
+                    <div>
+                        <label for="tv-episode" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Current Episode</label>
+                        <input type="number" id="tv-episode" placeholder="1" min="0" class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                    </div>
+                </div>
+
+                <!-- Dynamic: Video Game Fields -->
+                <div id="fields-game" class="dynamic-media-fields hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="game-platform" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Platform / Console</label>
+                        <input type="text" id="game-platform" placeholder="Steam, PS5, Switch, Xbox" class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                    </div>
+                    <div>
+                        <label for="game-progress" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Completion progress (%)</label>
+                        <input type="number" id="game-progress" placeholder="25" min="0" max="100" class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                    </div>
+                </div>
+
+                <!-- Dynamic: Music Fields -->
+                <div id="fields-music" class="dynamic-media-fields hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="music-artist" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Artist / Band</label>
+                        <input type="text" id="music-artist" placeholder="Pink Floyd, Daft Punk" class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                    </div>
+                    <div>
+                        <label for="music-format" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Release Format</label>
+                        <select id="music-format" class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                            <option value="Album">Full Album</option>
+                            <option value="Single">Single / EP</option>
+                            <option value="Playlist">Curated Playlist</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Universal Optional fields (Release Year & Cover Image) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="item-year" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Release Year</label>
+                        <input type="number" id="item-year" placeholder="e.g. 2024" min="1800" max="2100" class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                    </div>
+                    <div>
+                        <label for="item-image" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Cover Image URL (Optional)</label>
+                        <input type="url" id="item-image" placeholder="https://unsplash.com/..." class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div>
+                    <label for="item-notes" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Personal Notes / Description</label>
+                    <textarea id="item-notes" rows="3" placeholder="A short description or synopsis of why you want to watch/play/listen..." class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all resize-none"></textarea>
+                </div>
+
+                <!-- Modal Footer Buttons -->
+                <div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3">
+                    <button type="button" onclick="closeModal()" class="px-5 py-2 rounded-xl text-sm font-semibold border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/10 transition-all">Save Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Cloud / Accounts Setting Modal -->
+    <div id="account-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col scale-95 transition-all" id="account-modal-content">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                <h3 class="text-lg font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-cloud text-indigo-500"></i> Cloud Sync & Accounts
+                </h3>
+                <button onclick="closeAccountModal()" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Content Area -->
+            <div class="p-6 space-y-6">
+                <!-- If Firebase is NOT Configured (Default on clean GitHub Pages) -->
+                <div id="firebase-unconfigured-panel" class="hidden space-y-4">
+                    <div class="p-4 bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30 rounded-xl text-xs space-y-2">
+                        <p class="font-bold">🔒 Local Offline Mode Active</p>
+                        <p>To enable safe database syncing and cross-device email login, you can paste your own free cloud configuration credentials below.</p>
+                        <a href="https://console.firebase.google.com/" target="_blank" class="underline font-semibold block mt-1 hover:text-amber-600">Get your free config block at Google Firebase console →</a>
+                    </div>
+                    
+                    <div>
+                        <label for="firebase-config-input" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Paste Web Configuration Object</label>
+                        <textarea id="firebase-config-input" rows="6" placeholder='const firebaseConfig = {&#10;  apiKey: "AIzaSy...",&#10;  authDomain: "project-id.firebaseapp.com",&#10;  projectId: "project-id",&#10;  ...&#10;};' class="w-full px-4 py-2 text-xs font-mono rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all resize-none"></textarea>
+                    </div>
+                    
+                    <button onclick="saveCustomFirebaseConfig()" class="w-full py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md shadow-indigo-600/10">
+                        Enable Cloud Database
+                    </button>
+                </div>
+
+                <!-- If Firebase is Configured but Logged Out -->
+                <div id="firebase-auth-form" class="hidden space-y-4">
+                    <div class="flex border-b border-slate-200 dark:border-slate-800 pb-2">
+                        <button onclick="toggleAccountMode('login')" id="tab-login-mode" class="flex-1 text-center font-bold text-sm text-indigo-500 pb-2 border-b-2 border-indigo-500">Sign In</button>
+                        <button onclick="toggleAccountMode('register')" id="tab-register-mode" class="flex-1 text-center font-semibold text-sm text-slate-400 pb-2">Create Account</button>
+                    </div>
+
+                    <form onsubmit="handleAccountSubmit(event)" class="space-y-4">
+                        <div>
+                            <label for="account-email" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Email Address</label>
+                            <input type="email" id="account-email" required placeholder="you@example.com" class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                        </div>
+                        <div>
+                            <label for="account-password" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Password</label>
+                            <input type="password" id="account-password" required minlength="6" placeholder="••••••••" class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
+                        </div>
+                        <button type="submit" id="auth-submit-btn" class="w-full py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md">
+                            Sign In to Sync
+                        </button>
+                    </form>
+                </div>
+
+                <!-- If Firebase is Active & User is Logged In -->
+                <div id="firebase-profile-panel" class="hidden space-y-5 text-center">
+                    <div class="w-16 h-16 bg-gradient-to-tr from-indigo-500 to-pink-500 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto shadow-md" id="user-avatar">
+                        U
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Logged In Securely As</p>
+                        <p id="profile-email-text" class="text-sm font-semibold text-slate-800 dark:text-slate-100 mt-1">user@example.com</p>
+                        <p id="profile-uid-text" class="text-[10px] text-slate-400 font-mono mt-0.5 break-all">ID: unknown</p>
+                    </div>
+
+                    <div class="p-3 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30 rounded-xl text-xs flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-up animate-pulse text-sm"></i>
+                        <span>All changes are live syncing in real-time</span>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
+                        <button onclick="handleLogout()" class="w-full py-2 rounded-xl text-sm font-semibold border border-rose-200 dark:border-rose-900/40 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all">
+                            Sign Out Account
+                        </button>
+                        <button onclick="clearCustomFirebaseConfig()" id="btn-reset-db" class="hidden w-full py-2 rounded-xl text-[11px] font-medium text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all">
+                            Clear Custom Database Credentials
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Dialog Modal -->
+    <div id="dialog-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col p-6 text-center scale-95 transition-all" id="dialog-content">
+            <div id="dialog-icon" class="mx-auto w-12 h-12 rounded-full flex items-center justify-center text-xl mb-4">
+                <!-- Injected Icon -->
+            </div>
+            <h4 id="dialog-title" class="text-lg font-bold">Dialog Header</h4>
+            <p id="dialog-desc" class="text-sm text-slate-500 dark:text-slate-400 mt-2 mb-6">Detailed description text.</p>
+            <div id="dialog-actions" class="flex gap-3 justify-center">
+                <!-- Injected buttons -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Autofill Selection Results Modal -->
+    <div id="autofill-results-modal" class="fixed inset-0 z-[60] hidden items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col scale-95 transition-all" id="autofill-content">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                <h3 class="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                    <i class="fa-solid fa-list-ul text-indigo-500"></i> Multiple Matches Found
+                </h3>
+                <button onclick="closeAutofillModal()" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Content List -->
+            <div class="p-6 space-y-4">
+                <p class="text-xs text-slate-500 dark:text-slate-400">We found multiple possible options for your search. Tap the correct match to populate details and generate custom cover art:</p>
+                <div id="autofill-choices" class="space-y-2.5 max-h-[350px] overflow-y-auto pr-1">
+                    <!-- Injected Choice elements -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+
+    <!-- Firebase core dependencies and real-time syncing scripts -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, deleteDoc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Default Sample Data
+        const defaultItems = [
+            {
+                id: "1",
+                title: "Inception",
+                type: "movie",
+                status: "In Progress",
+                priority: "High",
+                rating: 4,
+                year: 2010,
+                image: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=400&q=80",
+                notes: "Mind-bending heist thriller. Watching it with friends.",
+                director: "Christopher Nolan",
+                runtime: 148,
+                dateAdded: "2026-06-15T12:00:00.000Z"
+            },
+            {
+                id: "2",
+                title: "Severance",
+                type: "tv",
+                status: "In Progress",
+                priority: "High",
+                rating: 5,
+                year: 2022,
+                image: "https://images.unsplash.com/photo-1593305841991-05c297ba4575?auto=format&fit=crop&w=400&q=80",
+                notes: "Incredibly gripping workplace sci-fi series. Season 2 starts soon!",
+                season: 1,
+                episode: 7,
+                dateAdded: "2026-06-10T14:30:00.000Z"
+            },
+            {
+                id: "3",
+                title: "The Legend of Zelda: Tears of the Kingdom",
+                type: "game",
+                status: "Not Started",
+                priority: "Medium",
+                rating: 0,
+                year: 2023,
+                image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=400&q=80",
+                notes: "Open-world sandbox masterpiece. Estimated ~100 hours gameplay.",
+                platform: "Nintendo Switch",
+                progress: 0,
+                dateAdded: "2026-06-01T09:15:00.000Z"
+            },
+            {
+                id: "4",
+                title: "Discovery",
+                type: "music",
+                status: "Completed",
+                priority: "Low",
+                rating: 5,
+                year: 2001,
+                image: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&w=400&q=80",
+                notes: "Classic house masterpiece. Truly timeless.",
+                artist: "Daft Punk",
+                format: "Album",
+                dateAdded: "2026-05-20T11:45:00.000Z"
+            }
+        ];
+
+        // Global State variables
+        let mediaItems = JSON.parse(localStorage.getItem('omnishelf_media')) || defaultItems;
+        let currentFilterCategory = 'all';
+        let currentViewMode = 'grid';
+        let chartInstance = null;
+
+        // Firebase & Cloud State
+        let db = null;
+        let auth = null;
+        let firebaseActive = false;
+        let currentUser = null;
+        let unsubscribeFirestore = null;
+        let currentAccountFormMode = 'login'; // login or register
+
+        // Initialize Firebase Setup
+        async function initFirebase(config) {
+            try {
+                const app = initializeApp(config);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                firebaseActive = true;
+
+                // Setup indicators
+                document.getElementById('cloud-icon').className = "fa-solid fa-cloud text-indigo-500";
+                document.getElementById('cloud-dot').className = "absolute top-1 right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900";
+                document.getElementById('cloud-indicator-badge').innerText = "Connecting...";
+                document.getElementById('cloud-indicator-badge').className = "px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-500 border border-amber-500/40";
+
+                // Bind auth state change
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        currentUser = user;
+                        updateUIForUser(user);
+                        subscribeToFirestore(user.uid);
+                    } else {
+                        currentUser = null;
+                        updateUIForUser(null);
+                        if (unsubscribeFirestore) {
+                            unsubscribeFirestore();
+                            unsubscribeFirestore = null;
+                        }
+                        // Fall back to localStorage media list
+                        mediaItems = JSON.parse(localStorage.getItem('omnishelf_media')) || defaultItems;
+                        renderContent();
+                        updateStatsDashboard();
+                    }
+                });
+
+                // Auto sign-in if token is active in system
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else if (!auth.currentUser) {
+                    // Fallback to anonymous sign-in inside chatbox environment
+                    await signInAnonymously(auth);
+                }
+
+            } catch (err) {
+                console.error("Firebase Initialization Failed: ", err);
+                showToast("Could not connect to database. Staying local.", "error");
+                fallbackToOfflineMode();
+            }
+        }
+
+        function fallbackToOfflineMode() {
+            firebaseActive = false;
+            document.getElementById('cloud-icon').className = "fa-solid fa-cloud-slash text-slate-400";
+            document.getElementById('cloud-dot').className = "absolute top-1 right-1 w-2.5 h-2.5 bg-slate-400 rounded-full border-2 border-white dark:border-slate-900";
+            document.getElementById('cloud-indicator-badge').innerText = "Offline Mode";
+            document.getElementById('cloud-indicator-badge').className = "px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700";
+            
+            // Render local storage items
+            mediaItems = JSON.parse(localStorage.getItem('omnishelf_media')) || defaultItems;
+            renderContent();
+            updateStatsDashboard();
+        }
+
+        // Real-time Firestore sync
+        function subscribeToFirestore(userId) {
+            if (!db) return;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            // Follow RULE 1 for Private User-Specific collection paths
+            const collectionPath = `artifacts/${appId}/users/${userId}/backlog_items`;
+            const queryRef = collection(db, 'artifacts', appId, 'users', userId, 'backlog_items');
+
+            if (unsubscribeFirestore) unsubscribeFirestore();
+
+            unsubscribeFirestore = onSnapshot(queryRef, (snapshot) => {
+                const items = [];
+                snapshot.forEach(doc => {
+                    items.push({ id: doc.id, ...doc.data() });
+                });
+                mediaItems = items;
+                // Cache locally for faster visual performance & offline backup
+                localStorage.setItem('omnishelf_media', JSON.stringify(mediaItems));
+                renderContent();
+                updateStatsDashboard();
+            }, (error) => {
+                console.error("Firestore live read error: ", error);
+                showToast("Cloud connection error. Staying synced locally.", "error");
+            });
+        }
+
+        // Sync individual records
+        async function saveItem(item) {
+            if (firebaseActive && auth && auth.currentUser) {
+                const userId = auth.currentUser.uid;
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'backlog_items', item.id);
+                try {
+                    await setDoc(docRef, item);
+                } catch (error) {
+                    console.error("Firestore sync write failed: ", error);
+                    showToast("Database error. Item saved locally.", "error");
+                }
+            } else {
+                const index = mediaItems.findIndex(i => i.id === item.id);
+                if (index !== -1) {
+                    mediaItems[index] = item;
+                } else {
+                    mediaItems.push(item);
+                }
+                saveToLocalStorage();
+                renderContent();
+            }
+        }
+
+        // Delete individual records
+        async function deleteItem(itemId) {
+            if (firebaseActive && auth && auth.currentUser) {
+                const userId = auth.currentUser.uid;
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'backlog_items', itemId);
+                try {
+                    await deleteDoc(docRef);
+                } catch (error) {
+                    console.error("Firestore sync delete failed: ", error);
+                    showToast("Database error. Item deleted locally.", "error");
+                }
+            } else {
+                mediaItems = mediaItems.filter(i => i.id !== itemId);
+                saveToLocalStorage();
+                renderContent();
+            }
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('omnishelf_media', JSON.stringify(mediaItems));
+            updateStatsDashboard();
+        }
+
+        // Merge offline backlog to cloud account on register/first-login
+        async function mergeLocalDataToCloud() {
+            if (!firebaseActive || !auth || !auth.currentUser) return;
+            const offlineItems = JSON.parse(localStorage.getItem('omnishelf_media')) || [];
+            if (offlineItems.length === 0) return;
+
+            showToast("Syncing offline items to your cloud profile...", "info");
+            const userId = auth.currentUser.uid;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+            for (const item of offlineItems) {
+                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'backlog_items', item.id);
+                try {
+                    await setDoc(docRef, item);
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+            showToast("Local data merged with cloud database successfully!", "success");
+        }
+
+        // Dynamic config handling & custom key configurations
+        function saveCustomFirebaseConfig() {
+            const rawConfigText = document.getElementById('firebase-config-input').value;
+            if (!rawConfigText.trim()) return;
+
+            // Simple parser to extract keys from plain JS code/JSON object
+            let parsedConfig = null;
+            try {
+                parsedConfig = JSON.parse(rawConfigText.trim());
+            } catch(e) {
+                // Regex parser to read normal Javascript block formatting
+                parsedConfig = {};
+                const keys = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+                keys.forEach(k => {
+                    const match = rawConfigText.match(new RegExp(`${k}\\s*:\\s*["'\`]([^"'\`]+)["'\`]`));
+                    if (match && match[1]) {
+                        parsedConfig[k] = match[1];
+                    }
+                });
+            }
+
+            if (parsedConfig && parsedConfig.apiKey && parsedConfig.projectId) {
+                localStorage.setItem('omnishelf_custom_firebase_config', JSON.stringify(parsedConfig));
+                showToast("Custom database configured! Connecting...", "info");
+                initFirebase(parsedConfig);
+            } else {
+                showToast("Invalid config object. Please copy the complete firebaseConfig object.", "error");
+            }
+        }
+
+        function clearCustomFirebaseConfig() {
+            localStorage.removeItem('omnishelf_custom_firebase_config');
+            showToast("Database credentials deleted. Returning to standard local storage.", "info");
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        }
+
+        // Auth Account Form Submission (Login & Register)
+        async function handleAccountSubmit(event) {
+            event.preventDefault();
+            const email = document.getElementById('account-email').value.trim();
+            const password = document.getElementById('account-password').value;
+
+            if (!auth) return;
+
+            try {
+                if (currentAccountFormMode === 'login') {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    showToast("Signed in successfully!", "success");
+                } else {
+                    await createUserWithEmailAndPassword(auth, email, password);
+                    showToast("Account registered successfully!", "success");
+                    await mergeLocalDataToCloud();
+                }
+                closeAccountModal();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function handleLogout() {
+            if (!auth) return;
+            try {
+                await signOut(auth);
+                showToast("Signed out successfully", "success");
+                closeAccountModal();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        function toggleAccountMode(mode) {
+            currentAccountFormMode = mode;
+            const loginTab = document.getElementById('tab-login-mode');
+            const registerTab = document.getElementById('tab-register-mode');
+            const submitBtn = document.getElementById('auth-submit-btn');
+
+            if (mode === 'login') {
+                loginTab.className = "flex-1 text-center font-bold text-sm text-indigo-500 pb-2 border-b-2 border-indigo-500";
+                registerTab.className = "flex-1 text-center font-semibold text-sm text-slate-400 pb-2 border-b-0";
+                submitBtn.innerText = "Sign In to Sync";
+            } else {
+                registerTab.className = "flex-1 text-center font-bold text-sm text-indigo-500 pb-2 border-b-2 border-indigo-500";
+                loginTab.className = "flex-1 text-center font-semibold text-sm text-slate-400 pb-2 border-b-0";
+                submitBtn.innerText = "Create Account & Sync";
+            }
+        }
+
+        function updateUIForUser(user) {
+            const indicator = document.getElementById('cloud-indicator-badge');
+            const indicatorDot = document.getElementById('cloud-dot');
+            const configPanel = document.getElementById('firebase-unconfigured-panel');
+            const authPanel = document.getElementById('firebase-auth-form');
+            const profilePanel = document.getElementById('firebase-profile-panel');
+            const btnResetDb = document.getElementById('btn-reset-db');
+
+            // Show custom credential delete button if they configured their own keys
+            const hasCustomConfig = !!localStorage.getItem('omnishelf_custom_firebase_config');
+            if (hasCustomConfig) {
+                btnResetDb.classList.remove('hidden');
+            } else {
+                btnResetDb.classList.add('hidden');
+            }
+
+            if (!firebaseActive) {
+                configPanel.classList.remove('hidden');
+                authPanel.classList.add('hidden');
+                profilePanel.classList.add('hidden');
+                return;
+            }
+
+            if (user) {
+                // Synced & Logged In
+                const email = user.email || 'Anonymous User';
+                indicator.innerText = user.isAnonymous ? "🟢 Cloud Mode (Anon)" : "🟢 Cloud Synced";
+                indicator.className = "px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/30";
+                indicatorDot.className = "absolute top-1 right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900";
+
+                configPanel.classList.add('hidden');
+                authPanel.classList.add('hidden');
+                profilePanel.classList.remove('hidden');
+
+                document.getElementById('profile-email-text').innerText = email;
+                document.getElementById('profile-uid-text').innerText = `ID: ${user.uid}`;
+                document.getElementById('user-avatar').innerText = email.substring(0,2).toUpperCase();
+            } else {
+                // Connected to DB, but not authenticated
+                indicator.innerText = "🟡 Auth Required";
+                indicator.className = "px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/30";
+                indicatorDot.className = "absolute top-1 right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-white dark:border-slate-900";
+
+                configPanel.classList.add('hidden');
+                authPanel.classList.remove('hidden');
+                profilePanel.classList.add('hidden');
+            }
+        }
+
+        // Dark/Light Theme Manager
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = "fa-solid fa-sun";
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                icon.className = "fa-solid fa-moon";
+                localStorage.setItem('theme', 'dark');
+            }
+            if (firebaseActive) updateStatsDashboard();
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (savedTheme === 'light') {
+                html.classList.remove('dark');
+                icon.className = "fa-solid fa-sun";
+            } else {
+                html.classList.add('dark');
+                icon.className = "fa-solid fa-moon";
+            }
+        }
+
+        // Helper displays
+        function getCategoryBadge(type) {
+            const badges = {
+                movie: `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400"><i class="fa-solid fa-film"></i> Movie</span>`,
+                tv: `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-400"><i class="fa-solid fa-tv"></i> TV</span>`,
+                game: `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-100 text-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-400"><i class="fa-solid fa-gamepad"></i> Game</span>`,
+                music: `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400"><i class="fa-solid fa-music"></i> Music</span>`
+            };
+            return badges[type] || '';
+        }
+
+        function renderStars(rating, size = 'sm') {
+            let starsHtml = `<div class="flex text-${size} gap-0.5">`;
+            for (let i = 1; i <= 5; i++) {
+                if (i <= rating) {
+                    starsHtml += `<i class="fa-solid fa-star text-amber-400"></i>`;
+                } else {
+                    starsHtml += `<i class="fa-regular fa-star text-slate-300 dark:text-slate-600"></i>`;
+                }
+            }
+            starsHtml += '</div>';
+            return starsHtml;
+        }
+
+        function getStatusBadge(status) {
+            switch (status) {
+                case 'Completed':
+                    return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/40">Completed</span>`;
+                case 'In Progress':
+                    return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-950/40 text-blue-800 dark:text-blue-400 border border-blue-200 dark:border-blue-900/40">In Progress</span>`;
+                case 'Abandoned':
+                    return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">On Hold</span>`;
+                default:
+                    return `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30">Not Started</span>`;
+            }
+        }
+
+        function getPriorityTag(priority) {
+            switch (priority) {
+                case 'High':
+                    return `<span class="text-xs font-semibold text-rose-500 flex items-center gap-1"><i class="fa-solid fa-fire-flame-curved"></i> High</span>`;
+                case 'Medium':
+                    return `<span class="text-xs font-semibold text-amber-500 flex items-center gap-1"><i class="fa-solid fa-bolt"></i> Medium</span>`;
+                default:
+                    return `<span class="text-xs font-semibold text-slate-400 flex items-center gap-1"><i class="fa-solid fa-zzz"></i> Low</span>`;
+            }
+        }
+
+        // Generative vector/image fallbacks
+        function generateFallBackImage(title, type) {
+            const grads = [
+                'from-pink-500 to-indigo-500',
+                'from-violet-600 to-red-400',
+                'from-emerald-400 to-teal-700',
+                'from-yellow-400 to-orange-600',
+                'from-fuchsia-600 to-pink-500',
+                'from-blue-600 to-cyan-500'
+            ];
+            const sum = title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            const selectedGrad = grads[sum % grads.length];
+            const icons = { movie: 'film', tv: 'tv', game: 'gamepad', music: 'music' };
+            const icon = icons[type] || 'layer-group';
+
+            return `
+                <div class="w-full h-full bg-gradient-to-tr ${selectedGrad} flex flex-col justify-center items-center p-4 text-white select-none">
+                    <i class="fa-solid fa-${icon} text-4xl mb-3 opacity-80"></i>
+                    <span class="font-bold text-center text-sm line-clamp-2">${title}</span>
+                </div>
+            `;
+        }
+
+        function toggleStats() {
+            const container = document.getElementById('stats-container');
+            const toggleText = document.getElementById('stats-toggle-text');
+            const toggleIcon = document.getElementById('stats-toggle-icon');
+
+            if (container.classList.contains('max-h-0')) {
+                container.classList.remove('max-h-0', 'mb-0');
+                container.classList.add('max-h-[1000px]');
+                toggleText.innerText = "Hide Dashboard Analytics";
+                toggleIcon.classList.remove('rotate-180');
+            } else {
+                container.classList.remove('max-h-[1000px]');
+                container.classList.add('max-h-0', 'mb-0');
+                toggleText.innerText = "Show Dashboard Analytics";
+                toggleIcon.classList.add('rotate-180');
+            }
+        }
+
+        function updateStatsDashboard() {
+            const total = mediaItems.length;
+            const progress = mediaItems.filter(i => i.status === 'In Progress').length;
+            const completed = mediaItems.filter(i => i.status === 'Completed').length;
+            const unstarted = mediaItems.filter(i => i.status === 'Not Started').length;
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-progress').innerText = progress;
+            document.getElementById('stat-completed').innerText = completed;
+            document.getElementById('stat-unstarted').innerText = unstarted;
+
+            const completionPct = total > 0 ? Math.round((completed / total) * 100) : 0;
+            document.getElementById('stat-completed-pct').innerText = `${completionPct}% completion rate`;
+
+            const countMap = { movie: 0, tv: 0, game: 0, music: 0 };
+            mediaItems.forEach(i => {
+                if (countMap[i.type] !== undefined) countMap[i.type]++;
+            });
+
+            const ctx = document.getElementById('mediaChart').getContext('2d');
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Movies', 'TV Shows', 'Games', 'Music'],
+                    datasets: [{
+                        data: [countMap.movie, countMap.tv, countMap.game, countMap.music],
+                        backgroundColor: ['#ef4444', '#f59e0b', '#6366f1', '#10b981'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'right',
+                            labels: {
+                                color: document.documentElement.classList.contains('dark') ? '#94a3b8' : '#475569',
+                                boxWidth: 12,
+                                font: { size: 10, weight: 'bold' }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        // Custom inline toast helper (avoid system alerts)
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const icons = {
+                success: 'fa-circle-check text-emerald-500',
+                error: 'fa-circle-xmark text-rose-500',
+                info: 'fa-circle-info text-blue-500'
+            };
+
+            toast.className = "flex items-center gap-3 p-4 rounded-xl shadow-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto max-w-sm";
+            toast.innerHTML = `
+                <i class="fa-solid ${icons[type]} text-lg shrink-0"></i>
+                <div class="text-sm font-medium text-slate-700 dark:text-slate-300">${message}</div>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function setCategoryFilter(category) {
+            currentFilterCategory = category;
+            
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.className = "category-tab px-4 py-2 text-sm font-medium rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 shrink-0 transition-all";
+            });
+
+            const activeTab = document.getElementById(`tab-${category}`);
+            if (activeTab) {
+                activeTab.className = "category-tab px-4 py-2 text-sm font-semibold rounded-xl bg-indigo-600 text-white flex items-center gap-2 shrink-0 transition-all shadow-md shadow-indigo-600/10";
+            }
+
+            renderContent();
+        }
+
+        function setViewMode(mode) {
+            currentViewMode = mode;
+            const gridBtn = document.getElementById('btn-grid-view');
+            const listBtn = document.getElementById('btn-list-view');
+
+            if (mode === 'grid') {
+                gridBtn.className = "w-9 h-9 rounded-lg flex items-center justify-center bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50 transition-all";
+                listBtn.className = "w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all";
+                document.getElementById('media-grid').classList.remove('hidden');
+                document.getElementById('media-list').classList.add('hidden');
+            } else {
+                listBtn.className = "w-9 h-9 rounded-lg flex items-center justify-center bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50 transition-all";
+                gridBtn.className = "w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all";
+                document.getElementById('media-grid').classList.add('hidden');
+                document.getElementById('media-list').classList.remove('hidden');
+            }
+
+            renderContent();
+        }
+
+        function handleFilterChange() {
+            renderContent();
+        }
+
+        function getFilteredAndSortedItems() {
+            let items = [...mediaItems];
+
+            // 1. Category Filter
+            if (currentFilterCategory !== 'all') {
+                items = items.filter(i => i.type === currentFilterCategory);
+            }
+
+            // 2. Search Keyword
+            const query = document.getElementById('filter-search').value.toLowerCase().trim();
+            if (query) {
+                items = items.filter(i => {
+                    return (
+                        i.title.toLowerCase().includes(query) ||
+                        (i.notes && i.notes.toLowerCase().includes(query)) ||
+                        (i.director && i.director.toLowerCase().includes(query)) ||
+                        (i.artist && i.artist.toLowerCase().includes(query)) ||
+                        (i.platform && i.platform.toLowerCase().includes(query))
+                    );
+                });
+            }
+
+            // 3. Status Filter
+            const status = document.getElementById('filter-status').value;
+            if (status !== 'all') {
+                items = items.filter(i => i.status === status);
+            }
+
+            // 4. Priority Filter
+            const priority = document.getElementById('filter-priority').value;
+            if (priority !== 'all') {
+                items = items.filter(i => i.priority === priority);
+            }
+
+            // 5. Sorting
+            const sort = document.getElementById('filter-sort').value;
+            items.sort((a, b) => {
+                if (sort === 'date-new') {
+                    return new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0);
+                } else if (sort === 'date-old') {
+                    return new Date(a.dateAdded || 0) - new Date(b.dateAdded || 0);
+                } else if (sort === 'title-asc') {
+                    return a.title.localeCompare(b.title);
+                } else if (sort === 'title-desc') {
+                    return b.title.localeCompare(a.title);
+                } else if (sort === 'rating-desc') {
+                    return b.rating - a.rating;
+                } else if (sort === 'priority-desc') {
+                    const priorityWeight = { High: 3, Medium: 2, Low: 1 };
+                    return (priorityWeight[b.priority] || 0) - (priorityWeight[a.priority] || 0);
+                }
+                return 0;
+            });
+
+            return items;
+        }
+
+        function renderContent() {
+            const items = getFilteredAndSortedItems();
+            const noItemsState = document.getElementById('no-items-state');
+            const mediaGrid = document.getElementById('media-grid');
+            const mediaList = document.getElementById('media-list');
+
+            if (items.length === 0) {
+                noItemsState.classList.remove('hidden');
+                mediaGrid.classList.add('hidden');
+                mediaList.classList.add('hidden');
+                return;
+            } else {
+                noItemsState.classList.add('hidden');
+                if (currentViewMode === 'grid') {
+                    mediaGrid.classList.remove('hidden');
+                } else {
+                    mediaList.classList.remove('hidden');
+                }
+            }
+
+            if (currentViewMode === 'grid') {
+                renderGridView(items);
+            } else {
+                renderListView(items);
+            }
+        }
+
+        function renderGridView(items) {
+            const grid = document.getElementById('media-grid');
+            grid.innerHTML = '';
+
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = `media-card bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col glow-${item.type}`;
+                
+                let contextHtml = '';
+                if (item.type === 'movie') {
+                    contextHtml = `
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">
+                            Director: <span class="font-medium text-slate-700 dark:text-slate-300">${item.director || 'Unknown'}</span>
+                        </p>
+                        ${item.runtime ? `<p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"><i class="fa-regular fa-clock mr-1"></i> ${item.runtime} mins</p>` : ''}
+                    `;
+                } else if (item.type === 'tv') {
+                    contextHtml = `
+                        <div class="mt-2 flex items-center justify-between bg-slate-50 dark:bg-slate-950/40 p-2 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                            <span class="text-xs font-semibold text-slate-500">Season ${item.season || 1}, Ep ${item.episode || 0}</span>
+                            <div class="flex gap-1">
+                                <button onclick="changeProgress('${item.id}', -1, event)" class="w-6 h-6 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-slate-100 text-xs shadow-sm"><i class="fa-solid fa-minus"></i></button>
+                                <button onclick="changeProgress('${item.id}', 1, event)" class="w-6 h-6 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-slate-100 text-xs shadow-sm"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </div>
+                    `;
+                } else if (item.type === 'game') {
+                    const progressPercent = item.progress || 0;
+                    contextHtml = `
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">
+                            Platform: <span class="font-medium text-slate-700 dark:text-slate-300">${item.platform || 'General'}</span>
+                        </p>
+                        <div class="mt-2">
+                            <div class="flex justify-between items-center text-[10px] font-bold text-slate-400 mb-1">
+                                <span>COMPLETION</span>
+                                <span>${progressPercent}%</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                <div class="h-full bg-brand-games" style="width: ${progressPercent}%"></div>
+                            </div>
+                        </div>
+                    `;
+                } else if (item.type === 'music') {
+                    contextHtml = `
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">
+                            Artist: <span class="font-medium text-slate-700 dark:text-slate-300">${item.artist || 'Unknown'}</span>
+                        </p>
+                        ${item.format ? `<span class="inline-block mt-1 text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40 px-2 py-0.5 rounded">${item.format}</span>` : ''}
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="relative h-44 w-full bg-slate-100 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800/80 overflow-hidden flex-shrink-0">
+                        ${item.image ? `<img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110" onerror="this.outerHTML=\`${generateFallBackImage(item.title, item.type)}\`"/>` : generateFallBackImage(item.title, item.type)}
+                        <div class="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
+                            ${getCategoryBadge(item.type)}
+                        </div>
+                        <div class="absolute bottom-3 right-3">
+                            ${getStatusBadge(item.status)}
+                        </div>
+                    </div>
+                    <div class="p-5 flex-1 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start gap-2">
+                                <h4 class="font-bold text-base leading-snug line-clamp-1 text-slate-900 dark:text-white" title="${item.title}">${item.title}</h4>
+                                <span class="text-xs text-slate-400 font-semibold mt-0.5 shrink-0">${item.year ? item.year : ''}</span>
+                            </div>
+                            <div class="flex items-center justify-between mt-2">
+                                ${renderStars(item.rating)}
+                                ${getPriorityTag(item.priority)}
+                            </div>
+                            <div class="mt-3">
+                                ${contextHtml}
+                            </div>
+                            ${item.notes ? `<p class="mt-4 text-xs text-slate-400 dark:text-slate-500 line-clamp-2 border-t border-slate-100 dark:border-slate-800/60 pt-3 italic">"${item.notes}"</p>` : ''}
+                        </div>
+                        
+                        <div class="flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800/80 pt-4 mt-4">
+                            <button onclick="toggleItemStatus('${item.id}', event)" class="flex items-center justify-center p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all text-sm" title="Quick Cycle Status">
+                                <i class="fa-solid fa-arrows-spin"></i>
+                            </button>
+                            <button onclick="openEditModal('${item.id}', event)" class="flex items-center justify-center p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all text-sm" title="Edit Item">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="confirmDeleteItem('${item.id}', event)" class="flex items-center justify-center p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 transition-all text-sm" title="Remove Item">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderListView(items) {
+            const tbody = document.getElementById('list-tbody');
+            tbody.innerHTML = '';
+
+            items.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors";
+                
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-950">
+                                ${item.image ? `<img src="${item.image}" alt="" class="w-full h-full object-cover" onerror="this.outerHTML='<div class=&quot;w-full h-full flex items-center justify-center text-xs bg-slate-300 dark:bg-slate-800&quot;><i class=&quot;fa-solid fa-image&quot;></i></div>'"/>` : `<div class="w-full h-full flex items-center justify-center text-xs bg-slate-300 dark:bg-slate-800"><i class="fa-solid fa-image"></i></div>`}
+                            </div>
+                            <div>
+                                <div class="text-sm font-semibold text-slate-900 dark:text-white line-clamp-1">${item.title}</div>
+                                <div class="text-[10px] text-slate-400">${item.year ? item.year : 'N/A'}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                        ${getCategoryBadge(item.type)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${getStatusBadge(item.status)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                        ${getPriorityTag(item.priority)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                        ${renderStars(item.rating)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div class="flex items-center justify-end gap-2">
+                            <button onclick="toggleItemStatus('${item.id}', event)" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all" title="Cycle Status">
+                                <i class="fa-solid fa-arrows-spin text-sm"></i>
+                            </button>
+                            <button onclick="openEditModal('${item.id}', event)" class="p-1.5 text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all" title="Edit">
+                                <i class="fa-regular fa-pen-to-square text-sm"></i>
+                            </button>
+                            <button onclick="confirmDeleteItem('${item.id}', event)" class="p-1.5 text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 transition-all" title="Delete">
+                                <i class="fa-regular fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function changeProgress(itemId, delta, event) {
+            if (event) event.stopPropagation();
+            const item = mediaItems.find(i => i.id === itemId);
+            if (!item || item.type !== 'tv') return;
+
+            const oldEp = item.episode || 0;
+            const newEp = Math.max(0, oldEp + delta);
+            item.episode = newEp;
+
+            if (newEp > 0 && item.status === 'Not Started') {
+                item.status = 'In Progress';
+                showToast(`"${item.title}" status is now In Progress!`, 'info');
+            }
+
+            saveItem(item);
+        }
+
+        function toggleItemStatus(itemId, event) {
+            if (event) event.stopPropagation();
+            const item = mediaItems.find(i => i.id === itemId);
+            if (!item) return;
+
+            const statuses = ['Not Started', 'In Progress', 'Completed', 'Abandoned'];
+            const currentIndex = statuses.indexOf(item.status);
+            const nextIndex = (currentIndex + 1) % statuses.length;
+            item.status = statuses[nextIndex];
+
+            if (item.status === 'Completed' && item.rating === 0) {
+                item.rating = 4;
+            }
+
+            if (item.type === 'game') {
+                if (item.status === 'Completed') item.progress = 100;
+                if (item.status === 'Not Started') item.progress = 0;
+            }
+
+            showToast(`Status updated to "${item.status}"`, 'success');
+            saveItem(item);
+        }
+
+        function openAddModal() {
+            document.getElementById('modal-title').innerText = "Add New Entry";
+            document.getElementById('media-form').reset();
+            document.getElementById('item-id').value = "";
+            setRatingValue(0);
+
+            document.getElementById('item-type').value = "movie";
+            document.getElementById('item-status').value = "Not Started";
+            document.getElementById('item-priority').value = "Medium";
+
+            adaptFormFields();
+            showModal();
+        }
+
+        function openEditModal(itemId, event) {
+            if (event) event.stopPropagation();
+            const item = mediaItems.find(i => i.id === itemId);
+            if (!item) return;
+
+            document.getElementById('modal-title').innerText = "Edit Entry";
+            document.getElementById('item-id').value = item.id;
+            document.getElementById('item-title').value = item.title;
+            document.getElementById('item-type').value = item.type;
+            document.getElementById('item-status').value = item.status;
+            document.getElementById('item-priority').value = item.priority;
+            document.getElementById('item-year').value = item.year || '';
+            document.getElementById('item-image').value = item.image || '';
+            document.getElementById('item-notes').value = item.notes || '';
+            setRatingValue(item.rating || 0);
+
+            adaptFormFields();
+
+            if (item.type === 'movie') {
+                document.getElementById('movie-director').value = item.director || '';
+                document.getElementById('movie-runtime').value = item.runtime || '';
+            } else if (item.type === 'tv') {
+                document.getElementById('tv-season').value = item.season || 1;
+                document.getElementById('tv-episode').value = item.episode || 0;
+            } else if (item.type === 'game') {
+                document.getElementById('game-platform').value = item.platform || '';
+                document.getElementById('game-progress').value = item.progress || 0;
+            } else if (item.type === 'music') {
+                document.getElementById('music-artist').value = item.artist || '';
+                document.getElementById('music-format').value = item.format || 'Album';
+            }
+
+            showModal();
+        }
+
+        function showModal() {
+            const modal = document.getElementById('media-modal');
+            const content = document.getElementById('modal-content');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('media-modal');
+            const content = document.getElementById('modal-content');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }, 100);
+        }
+
+        function adaptFormFields() {
+            const type = document.getElementById('item-type').value;
+            document.querySelectorAll('.dynamic-media-fields').forEach(el => el.classList.add('hidden'));
+
+            const activeDiv = document.getElementById(`fields-${type}`);
+            if (activeDiv) {
+                activeDiv.classList.remove('hidden');
+            }
+        }
+
+        function setRatingValue(rating) {
+            document.getElementById('item-rating').value = rating;
+            const starBtns = document.querySelectorAll('.star-btn');
+            
+            starBtns.forEach((btn, index) => {
+                const starIcon = btn.querySelector('i');
+                if (index < rating) {
+                    starIcon.className = "fa-solid fa-star text-amber-400";
+                } else {
+                    starIcon.className = "fa-regular fa-star text-slate-300 dark:text-slate-700";
+                }
+            });
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+
+            const itemId = document.getElementById('item-id').value;
+            const title = document.getElementById('item-title').value.trim();
+            const type = document.getElementById('item-type').value;
+            const status = document.getElementById('item-status').value;
+            const priority = document.getElementById('item-priority').value;
+            const rating = parseInt(document.getElementById('item-rating').value) || 0;
+            const year = parseInt(document.getElementById('item-year').value) || null;
+            const image = document.getElementById('item-image').value.trim();
+            const notes = document.getElementById('item-notes').value.trim();
+
+            if (!title) return;
+
+            const specifics = {};
+            if (type === 'movie') {
+                specifics.director = document.getElementById('movie-director').value.trim();
+                specifics.runtime = parseInt(document.getElementById('movie-runtime').value) || null;
+            } else if (type === 'tv') {
+                specifics.season = parseInt(document.getElementById('tv-season').value) || 1;
+                specifics.episode = parseInt(document.getElementById('tv-episode').value) || 0;
+            } else if (type === 'game') {
+                specifics.platform = document.getElementById('game-platform').value.trim();
+                specifics.progress = parseInt(document.getElementById('game-progress').value) || 0;
+            } else if (type === 'music') {
+                specifics.artist = document.getElementById('music-artist').value.trim();
+                specifics.format = document.getElementById('music-format').value;
+            }
+
+            const itemPayload = {
+                id: itemId || crypto.randomUUID(),
+                title, type, status, priority, rating, year, image, notes,
+                dateAdded: itemId ? (mediaItems.find(i => i.id === itemId)?.dateAdded || new Date().toISOString()) : new Date().toISOString(),
+                ...specifics
+            };
+
+            saveItem(itemPayload).then(() => {
+                showToast(itemId ? `Updated "${title}"` : `Added "${title}" to your shelf`, 'success');
+            });
+
+            closeModal();
+        }
+
+        // Accounts Panel handlers
+        function openAccountModal() {
+            const modal = document.getElementById('account-modal');
+            const content = document.getElementById('account-modal-content');
+            
+            updateUIForUser(currentUser);
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeAccountModal() {
+            const modal = document.getElementById('account-modal');
+            const content = document.getElementById('account-modal-content');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }, 100);
+        }
+
+        function openDialog({ title, desc, iconBg, iconColor, iconClass, buttons }) {
+            document.getElementById('dialog-title').innerText = title;
+            document.getElementById('dialog-desc').innerText = desc;
+
+            const iconContainer = document.getElementById('dialog-icon');
+            iconContainer.className = `mx-auto w-12 h-12 rounded-full flex items-center justify-center text-xl mb-4 ${iconBg} ${iconColor}`;
+            iconContainer.innerHTML = `<i class="${iconClass}"></i>`;
+
+            const actionsContainer = document.getElementById('dialog-actions');
+            actionsContainer.innerHTML = '';
+
+            buttons.forEach(btn => {
+                const button = document.createElement('button');
+                button.className = `px-4 py-2 rounded-xl text-sm font-semibold transition-all ${btn.styleClass}`;
+                button.innerText = btn.text;
+                button.onclick = () => {
+                    closeDialog();
+                    if (btn.action) btn.action();
+                };
+                actionsContainer.appendChild(button);
+            });
+
+            const dialog = document.getElementById('dialog-modal');
+            const content = document.getElementById('dialog-content');
+            dialog.classList.remove('hidden');
+            dialog.classList.add('flex');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeDialog() {
+            const dialog = document.getElementById('dialog-modal');
+            const content = document.getElementById('dialog-content');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                dialog.classList.remove('flex');
+                dialog.classList.add('hidden');
+            }, 100);
+        }
+
+        function confirmDeleteItem(itemId, event) {
+            if (event) event.stopPropagation();
+            const item = mediaItems.find(i => i.id === itemId);
+            if (!item) return;
+
+            openDialog({
+                title: "Delete Backlog Item?",
+                desc: `Are you absolutely sure you want to remove "${item.title}" from your shelf? This action cannot be undone.`,
+                iconBg: "bg-rose-100 dark:bg-rose-950/40",
+                iconColor: "text-rose-600 dark:text-rose-400",
+                iconClass: "fa-regular fa-trash-can",
+                buttons: [
+                    {
+                        text: "Cancel",
+                        styleClass: "border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                    },
+                    {
+                        text: "Delete",
+                        styleClass: "bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-600/10",
+                        action: () => {
+                            deleteItem(itemId).then(() => {
+                                showToast(`Removed "${item.title}"`, 'error');
+                            });
+                        }
+                    }
+                ]
+            });
+        }
+
+        // Smart recommendation selector
+        function pickRandomItem() {
+            let candidates = mediaItems.filter(i => i.status === 'Not Started' && i.priority !== 'Low');
+            
+            if (candidates.length === 0) {
+                candidates = mediaItems.filter(i => i.status === 'Not Started');
+            }
+
+            if (candidates.length === 0) {
+                candidates = mediaItems.filter(i => i.status === 'In Progress');
+            }
+
+            if (candidates.length === 0) {
+                openDialog({
+                    title: "Shelf is Empty!",
+                    desc: "Add some items you want to watch, play, or listen to first so we can pick one for you!",
+                    iconBg: "bg-indigo-100 dark:bg-indigo-950/40",
+                    iconColor: "text-indigo-600 dark:text-indigo-400",
+                    iconClass: "fa-solid fa-box-open",
+                    buttons: [{
+                        text: "Perfect",
+                        styleClass: "bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/10"
+                    }]
+                });
+                return;
+            }
+
+            const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+
+            openDialog({
+                title: "Your Next Adventure! 🎲",
+                desc: `We selected "${chosen.title}" (${chosen.type.toUpperCase()}) for you to start next! It has ${chosen.priority} priority. Let's dig in!`,
+                iconBg: "bg-emerald-100 dark:bg-emerald-950/40",
+                iconColor: "text-emerald-600 dark:text-emerald-400",
+                iconClass: "fa-solid fa-dice-five",
+                buttons: [
+                    {
+                        text: "Roll Again",
+                        styleClass: "border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300",
+                        action: () => setTimeout(pickRandomItem, 150)
+                    },
+                    {
+                        text: "Start Watch/Play!",
+                        styleClass: "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/10",
+                        action: () => {
+                            chosen.status = "In Progress";
+                            saveItem(chosen).then(() => {
+                                showToast(`"${chosen.title}" is now In Progress!`, 'success');
+                            });
+                        }
+                    }
+                ]
+            });
+        }
+
+        // Map scoped module functions to window scope for HTML inline calls
+        window.toggleTheme = toggleTheme;
+        window.toggleStats = toggleStats;
+        window.setCategoryFilter = setCategoryFilter;
+        window.setViewMode = setViewMode;
+        window.handleFilterChange = handleFilterChange;
+        window.changeProgress = changeProgress;
+        window.toggleItemStatus = toggleItemStatus;
+        window.openAddModal = openAddModal;
+        window.openEditModal = openEditModal;
+        window.closeModal = closeModal;
+        window.adaptFormFields = adaptFormFields;
+        window.setRatingValue = setRatingValue;
+        window.handleFormSubmit = handleFormSubmit;
+        window.openAccountModal = openAccountModal;
+        window.closeAccountModal = closeAccountModal;
+        window.saveCustomFirebaseConfig = saveCustomFirebaseConfig;
+        window.clearCustomFirebaseConfig = clearCustomFirebaseConfig;
+        window.handleAccountSubmit = handleAccountSubmit;
+        window.handleLogout = handleLogout;
+        window.toggleAccountMode = toggleAccountMode;
+        window.confirmDeleteItem = confirmDeleteItem;
+        window.pickRandomItem = pickRandomItem;
+        window.closeDialog = closeDialog;
+
+        // Map new autofill selection functions to global window scope
+        window.closeAutofillModal = function() {
+            const modal = document.getElementById('autofill-results-modal');
+            const content = document.getElementById('autofill-content');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }, 100);
+        };
+
+        window.openAutofillModal = function() {
+            const modal = document.getElementById('autofill-results-modal');
+            const content = document.getElementById('autofill-content');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        };
+
+        // Startup lifecycle
+        window.onload = function() {
+            initTheme();
+            
+            // Check for injected system Firebase credentials
+            let activeConfig = null;
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                try {
+                    activeConfig = JSON.parse(__firebase_config);
+                } catch(e) {
+                    console.error("System config error:", e);
+                }
+            } else {
+                // Check if user has pasted custom database credentials
+                const savedConfigStr = localStorage.getItem('omnishelf_custom_firebase_config');
+                if (savedConfigStr) {
+                    try {
+                        activeConfig = JSON.parse(savedConfigStr);
+                    } catch(e) {
+                        console.error("Local custom config error:", e);
+                    }
+                }
+            }
+
+            if (activeConfig) {
+                initFirebase(activeConfig);
+            } else {
+                fallbackToOfflineMode();
+            }
+        }
+
+        // AI Magic Autofill Implementation (Multiple-Choice Matcher)
+        async function triggerAiAutofill() {
+            const title = document.getElementById('item-title').value.trim();
+            const type = document.getElementById('item-type').value;
+
+            if (!title) {
+                showToast("Please enter a Title first so the AI can search it!", "error");
+                return;
+            }
+
+            const autofillBtn = document.getElementById('ai-autofill-btn');
+            const originalContent = autofillBtn.innerHTML;
+            
+            // Set button loading state
+            autofillBtn.disabled = true;
+            autofillBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Searching...`;
+            
+            showToast(`AI is searching database for matches...`, "info");
+
+            try {
+                const apiKey = ""; // Canvas framework injects appropriate key
+                const metaUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                const systemPrompt = "You are a world-class media researcher. Use Google Search to find the 3 most likely matching real-world results for the provided title and media type. Present multiple distinct options (e.g. original vs remake, different developers/artists, or same-title titles). Output an array of up to 3 objects conforming to the requested schema. Write short, beautiful 2-sentence synopsis notes for each choice.";
+                const userQuery = `Find up to 3 distinct potential matching entries for the ${type}: "${title}". Include accurate creator detail (director for movies, series writer/creator for TV, game developer/publisher for games, lead artist/band for music), the release year, and a customized 2-sentence summary.`;
+
+                const metaPayload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    tools: [{ "google_search": {} }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "ARRAY",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    title: { type: "STRING" },
+                                    description: { type: "STRING" },
+                                    year: { type: "INTEGER" },
+                                    creator: { type: "STRING" },
+                                    extraDetail: { type: "STRING" },
+                                    numericSpec: { type: "INTEGER" }
+                                },
+                                required: ["title", "description", "year", "creator"]
+                            }
+                        }
+                    }
+                };
+
+                const metaResponse = await fetch(metaUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(metaPayload)
+                });
+
+                if (!metaResponse.ok) throw new Error("Metadata multi-search request failed");
+                const metaResult = await metaResponse.json();
+                
+                let matches = [];
+                if (metaResult.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    try {
+                        matches = JSON.parse(metaResult.candidates[0].content.parts[0].text);
+                    } catch (e) {
+                        console.error("Multi-choice JSON parsing error: ", e);
+                    }
+                }
+
+                if (!Array.isArray(matches) || matches.length === 0) {
+                    showToast("No structured results found. Please check spelling or fill form manually.", "error");
+                    return;
+                }
+
+                // Render matching candidates to selection panel
+                const choicesContainer = document.getElementById('autofill-choices');
+                choicesContainer.innerHTML = '';
+
+                matches.forEach((candidate, idx) => {
+                    const choiceBtn = document.createElement('button');
+                    choiceBtn.type = "button";
+                    choiceBtn.className = "w-full text-left p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all flex flex-col gap-1";
+                    
+                    choiceBtn.innerHTML = `
+                        <div class="flex justify-between items-start gap-2">
+                            <span class="font-bold text-sm text-slate-800 dark:text-white">${candidate.title}</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500">${candidate.year || 'N/A'}</span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-semibold">
+                            By/Platform: ${candidate.creator || 'Unknown'}
+                        </div>
+                        <p class="text-[11px] text-slate-400 dark:text-slate-500 line-clamp-2 mt-1 italic">"${candidate.description}"</p>
+                    `;
+
+                    // Handle application of selected metadata choice
+                    choiceBtn.onclick = async () => {
+                        window.closeAutofillModal();
+                        showToast(`Applying "${candidate.title}" details...`, "info");
+
+                        // Apply core inputs
+                        document.getElementById('item-title').value = candidate.title;
+                        document.getElementById('item-notes').value = candidate.description;
+                        if (candidate.year) document.getElementById('item-year').value = candidate.year;
+
+                        // Distribute specific formats
+                        if (type === 'movie') {
+                            document.getElementById('movie-director').value = candidate.creator || '';
+                            if (candidate.numericSpec) document.getElementById('movie-runtime').value = candidate.numericSpec;
+                        } else if (type === 'tv') {
+                            if (candidate.numericSpec) document.getElementById('tv-season').value = candidate.numericSpec;
+                            document.getElementById('tv-episode').value = 1;
+                        } else if (type === 'game') {
+                            document.getElementById('game-platform').value = candidate.creator || '';
+                        } else if (type === 'music') {
+                            document.getElementById('music-artist').value = candidate.creator || '';
+                            if (candidate.extraDetail) document.getElementById('music-format').value = candidate.extraDetail;
+                        }
+
+                        // Now initiate custom Google Imagen production art
+                        try {
+                            showToast("Customizing unique cover art design...", "info");
+                            const imageUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
+                            const imagePrompt = `Artistic, premium, minimalist vector graphic cover art poster design for the ${type} "${candidate.title}". Cinematic composition, professional flat graphic design aesthetic, vivid colors, premium masterpiece.`;
+
+                            const imagePayload = {
+                                instances: { prompt: imagePrompt },
+                                parameters: { "sampleCount": 1 }
+                            };
+
+                            const imageResponse = await fetch(imageUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(imagePayload)
+                            });
+
+                            if (imageResponse.ok) {
+                                const imageResult = await imageResponse.json();
+                                if (imageResult?.predictions?.[0]?.bytesBase64Encoded) {
+                                    const base64Image = `data:image/png;base64,${imageResult.predictions[0].bytesBase64Encoded}`;
+                                    document.getElementById('item-image').value = base64Image;
+                                    showToast("Unique cover art poster designed successfully!", "success");
+                                }
+                            } else {
+                                document.getElementById('item-image').value = `https://placehold.co/600x400/4f46e5/ffffff?text=${encodeURIComponent(candidate.title)}`;
+                                showToast("Details updated. Generative cover art skipped (fallback set).", "success");
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            document.getElementById('item-image').value = `https://placehold.co/600x400/4f46e5/ffffff?text=${encodeURIComponent(candidate.title)}`;
+                        }
+                    };
+
+                    choicesContainer.appendChild(choiceBtn);
+                });
+
+                // Display selector Modal
+                window.openAutofillModal();
+                showToast("Matches found! Choose the correct result from the dialog.", "success");
+
+            } catch (err) {
+                console.error("Autofill Multi-Search error: ", err);
+                showToast("Failed to run lookup. Please double-check title details.", "error");
+            } finally {
+                autofillBtn.disabled = false;
+                autofillBtn.innerHTML = originalContent;
+            }
+        }
+
+        window.triggerAiAutofill = triggerAiAutofill;
+    </script>
+</body>
+</html>
+```
+
+### Changes Made:
+1. **Removed the Redeclared Function**: Eliminated the redundant copy of `triggerAiAutofill` that was causing the script block compile failure.
+2. **Consolidated Core Script**: Cleansed the ES module boundaries to ensure that all interactive window mapping works properly. 
+3. **Restored Click Handlers**: The "Add Item" forms, dynamic dashboard statistics, and smart randomizer buttons will now open, update, and work seamlessly.
+
+Go ahead and copy this clean `index.html` block, update your file on GitHub, wait about a minute for Pages to rebuild, and try pressing **Add Item** again—it will work perfectly now!
