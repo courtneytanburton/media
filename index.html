@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniShelf - Entertainment Media Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            900: '#4c1d95',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-full transition-colors duration-200 flex flex-col">
+
+    <!-- MAIN NAVIGATION HEADER -->
+    <header class="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-brand-600 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+                    <i class="fa-solid fa-layer-group text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-extrabold tracking-tight bg-gradient-to-r from-indigo-600 to-brand-500 bg-clip-text text-transparent">OmniShelf</h1>
+                    <p class="text-[10px] text-slate-400 font-medium tracking-wider uppercase">Your Media Backlog</p>
+                </div>
+            </div>
+
+            <!-- CONTROLS & USER PORTAL -->
+            <div class="flex items-center gap-3">
+                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all" title="Toggle Dark/Light Mode">
+                    <i id="theme-icon" class="fa-solid fa-moon"></i>
+                </button>
+                <button onclick="openCloudModal()" class="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all text-xs font-semibold" id="cloud-status-btn">
+                    <i class="fa-solid fa-cloud"></i>
+                    <span class="hidden sm:inline" id="cloud-status-text">Local Only</span>
+                </button>
+                <button onclick="openFormModal()" class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 text-white rounded-xl font-semibold text-xs shadow-lg shadow-brand-500/20 hover:shadow-brand-500/30 active:scale-95 transition-all">
+                    <i class="fa-solid fa-plus"></i> Add Item
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
+        
+        <!-- DASHBOARD STATISTICS PANEL -->
+        <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex items-center gap-4 transition-all">
+                <div class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-clapperboard"></i>
+                </div>
+                <div>
+                    <span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Movies</span>
+                    <h3 class="text-xl font-bold mt-0.5" id="stat-movies">0</h3>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex items-center gap-4 transition-all">
+                <div class="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-tv"></i>
+                </div>
+                <div>
+                    <span class="text-xs font-semibold text-slate-400 dark:text-slate-500">TV Shows</span>
+                    <h3 class="text-xl font-bold mt-0.5" id="stat-tv">0</h3>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex items-center gap-4 transition-all">
+                <div class="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-gamepad"></i>
+                </div>
+                <div>
+                    <span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Games</span>
+                    <h3 class="text-xl font-bold mt-0.5" id="stat-games">0</h3>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex items-center gap-4 transition-all">
+                <div class="w-12 h-12 rounded-xl bg-pink-100 dark:bg-pink-900/40 text-pink-600 dark:text-pink-400 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-music"></i>
+                </div>
+                <div>
+                    <span class="text-xs font-semibold text-slate-400 dark:text-slate-500">Music</span>
+                    <h3 class="text-xl font-bold mt-0.5" id="stat-music">0</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- FILTER & CONTROLS SECTION -->
+        <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+            <!-- Search & Filters -->
+            <div class="w-full md:w-auto flex-grow grid grid-cols-1 sm:grid-cols-4 gap-3 max-w-4xl">
+                <!-- Text Search -->
+                <div class="relative sm:col-span-2">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="search-bar" placeholder="Search title, creator, or tags..." oninput="renderItems()" class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+                </div>
+                <!-- Media Filter -->
+                <div>
+                    <select id="filter-type" onchange="renderItems()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-semibold">
+                        <option value="all">📁 All Media</option>
+                        <option value="movie">🎥 Movies</option>
+                        <option value="tv">📺 TV Shows</option>
+                        <option value="game">🎮 Games</option>
+                        <option value="music">🎵 Music</option>
+                    </select>
+                </div>
+                <!-- Status Filter -->
+                <div>
+                    <select id="filter-status" onchange="renderItems()" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm font-semibold">
+                        <option value="all">🎯 All Progress</option>
+                        <option value="Not Started">⚪ Not Started</option>
+                        <option value="In Progress">⏳ In Progress</option>
+                        <option value="Completed">✅ Completed</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- View Options & Pick For Me -->
+            <div class="w-full md:w-auto flex items-center justify-between md:justify-end gap-3 self-stretch border-t border-slate-100 dark:border-slate-800 md:border-t-0 pt-3 md:pt-0">
+                <button onclick="triggerPickForMe()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold text-xs transition-all" title="Help me choose what to play or watch!">
+                    <i class="fa-solid fa-wand-magic-sparkles text-sm animate-pulse"></i> Pick For Me!
+                </button>
+                <div class="h-6 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block"></div>
+                <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-0.5">
+                    <button id="view-grid-btn" onclick="setViewMode('grid')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white dark:bg-slate-900 shadow-sm text-brand-600 dark:text-brand-400">
+                        <i class="fa-solid fa-grip"></i> Grid
+                    </button>
+                    <button id="view-list-btn" onclick="setViewMode('list')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+                        <i class="fa-solid fa-list"></i> List
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- MAIN RESULTS CONTAINER -->
+        <section id="media-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 min-h-[300px]">
+            <!-- Dynamic items loaded here -->
+        </section>
+    </main>
+
+    <!-- FOOTER STATS PANEL -->
+    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 mt-12 transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center sm:flex sm:justify-between sm:items-center">
+            <p class="text-xs text-slate-400 font-semibold">© 2026 OmniShelf Tracker. Powered securely via Cloud Sync & local sandboxing.</p>
+            <div class="flex items-center justify-center gap-4 mt-3 sm:mt-0 text-xs text-slate-400 font-semibold">
+                <a href="#" onclick="openCloudModal()" class="hover:text-brand-500">Sync Settings</a>
+                <span>•</span>
+                <span id="footer-connection-status"><span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>Local Device Active</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ADD / EDIT DIALOG OVERLAY -->
+    <div id="item-modal" class="fixed inset-0 z-50 overflow-y-auto hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="relative bg-white dark:bg-slate-900 rounded-3xl w-full max-w-2xl shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-950/20">
+                <div>
+                    <h3 id="modal-title" class="text-lg font-bold">Add New Entry</h3>
+                    <p class="text-[11px] text-slate-400 dark:text-slate-500 font-semibold uppercase mt-0.5 tracking-wide">Enter metadata manually or trigger AI lookup</p>
+                </div>
+                <button onclick="closeFormModal()" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Modal Form Body -->
+            <form id="media-form" onsubmit="saveItem(event)" class="p-6 overflow-y-auto flex-grow flex flex-col gap-5">
+                <input type="hidden" id="item-id">
+                <input type="hidden" id="item-image" value="">
+
+                <!-- Title & Type (AI Targets) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Media Format</label>
+                        <select id="item-type" onchange="toggleMediaFields()" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-brand-500 text-sm font-semibold">
+                            <option value="movie">🎥 Movie</option>
+                            <option value="tv">📺 TV Show</option>
+                            <option value="game">🎮 Video Game</option>
+                            <option value="music">🎵 Music Track / Album</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 flex justify-between items-center">
+                            <span>Title</span>
+                            <span class="text-[10px] text-indigo-500 font-bold lowercase italic">Supports AI lookup *</span>
+                        </label>
+                        <div class="relative">
+                            <input type="text" id="item-title" required placeholder="Ex: Inception, Halo, Thriller..." class="w-full pl-3.5 pr-28 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-brand-500 text-sm">
+                            <button type="button" id="ai-autofill-btn" onclick="triggerAiAutofill()" class="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-lg text-[10px] font-bold shadow-md transition-all flex items-center gap-1.5">
+                                <i class="fa-solid fa-wand-magic-sparkles text-xs animate-pulse"></i> AI Autofill
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic Format Specific Fields -->
+                <div id="dynamic-fields-box" class="p-4 bg-slate-50 dark:bg-slate-950/40 rounded-2xl border border-slate-100 dark:border-slate-800/40 flex flex-col gap-4">
+                    <!-- Movies: Director & Runtime -->
+                    <div id="fields-movie" class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Director</label>
+                            <input type="text" id="movie-director" placeholder="Ex: Christopher Nolan" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Runtime (Minutes)</label>
+                            <input type="number" id="movie-runtime" placeholder="Ex: 148" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm">
+                        </div>
+                    </div>
+
+                    <!-- TV Shows: Seasons & Episodes -->
+                    <div id="fields-tv" class="grid grid-cols-2 gap-4 hidden">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Current Season</label>
+                            <input type="number" id="tv-season" placeholder="Ex: 1" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Current Episode</label>
+                            <input type="number" id="tv-episode" placeholder="Ex: 8" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm">
+                        </div>
+                    </div>
+
+                    <!-- Games: Platform & Completion % -->
+                    <div id="fields-game" class="grid grid-cols-1 sm:grid-cols-2 gap-4 hidden">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Platform</label>
+                            <input type="text" id="game-platform" placeholder="Ex: Steam, PS5, Switch" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 flex justify-between">
+                                <span>Completion</span>
+                                <span id="game-progress-label" class="font-black text-brand-500">0%</span>
+                            </label>
+                            <input type="range" id="game-progress" min="0" max="100" value="0" oninput="document.getElementById('game-progress-label').innerText = this.value + '%'" class="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-brand-500 mt-3">
+                        </div>
+                    </div>
+
+                    <!-- Music: Artist & Music Format -->
+                    <div id="fields-music" class="grid grid-cols-2 gap-4 hidden">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Artist / Band</label>
+                            <input type="text" id="music-artist" placeholder="Ex: Pink Floyd" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Format / Album</label>
+                            <input type="text" id="music-format" placeholder="Ex: Album, Single, Playlist" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status, Priority, & Year -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Status</label>
+                        <select id="item-status" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-brand-500 text-sm font-semibold">
+                            <option value="Not Started">⚪ Not Started</option>
+                            <option value="In Progress">⏳ In Progress</option>
+                            <option value="Completed">✅ Completed</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Priority</label>
+                        <select id="item-priority" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-brand-500 text-sm font-semibold">
+                            <option value="3">🔥 High</option>
+                            <option value="2" selected>⚡ Medium</option>
+                            <option value="1">💤 Low</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Release Year</label>
+                        <input type="number" id="item-year" placeholder="Ex: 2026" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm">
+                    </div>
+                </div>
+
+                <!-- Plot/Notes Summary -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Short Description / Personal Notes</label>
+                    <textarea id="item-notes" rows="3" placeholder="Write a short summary, synopsis, review, or playlist link..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-2 focus:ring-brand-500 text-sm"></textarea>
+                </div>
+
+                <!-- Custom Tags -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Custom Tags (Comma Separated)</label>
+                    <input type="text" id="item-tags" placeholder="Ex: Scifi, Nostalgic, Multiplayer, Indie" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm">
+                </div>
+            </form>
+
+            <!-- Modal Footer Controls -->
+            <div class="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex justify-end gap-3">
+                <button type="button" onclick="closeFormModal()" class="px-4 py-2.5 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold transition-all">Cancel</button>
+                <button type="submit" form="media-form" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-xs shadow-lg shadow-brand-500/10 transition-all">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI MULTI-CHOICE MATCH SELECTION OVERLAY -->
+    <div id="autofill-modal" class="fixed inset-0 z-50 overflow-y-auto hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col overflow-hidden max-h-[85vh]">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-950/20">
+                <div>
+                    <h3 class="text-md font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-indigo-500 animate-pulse"></i> Select the Best Match
+                    </h3>
+                    <p class="text-[10px] text-slate-400 font-semibold uppercase mt-0.5 tracking-wide">We found multiple possibilities online</p>
+                </div>
+                <button onclick="closeAutofillModal()" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Option Buttons Box -->
+            <div id="autofill-choices" class="p-6 overflow-y-auto flex flex-col gap-3.5 max-h-[50vh]">
+                <!-- Populated dynamically via JS -->
+            </div>
+
+            <div class="p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex justify-end">
+                <button onclick="closeAutofillModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PICK FOR ME RESULT OVERLAY -->
+    <div id="pick-modal" class="fixed inset-0 z-50 overflow-y-auto hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden text-center p-6 flex flex-col items-center gap-4">
+            <div class="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-500 flex items-center justify-center text-3xl animate-bounce">
+                <i class="fa-solid fa-gift"></i>
+            </div>
+            <div>
+                <span class="text-[10px] font-extrabold text-amber-500 uppercase tracking-widest">Handpicked Backlog Recommendation</span>
+                <h3 class="text-xl font-black text-slate-800 dark:text-white mt-1" id="pick-item-title">Item Title</h3>
+                <p id="pick-item-creator" class="text-xs text-slate-400 mt-1 font-semibold">By: Creator Name</p>
+            </div>
+            <div class="w-full p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800/80 text-left">
+                <div class="flex justify-between items-center mb-2">
+                    <span id="pick-item-type-badge" class="px-2.5 py-0.5 rounded bg-brand-500/10 text-[10px] font-extrabold text-brand-600 dark:text-brand-400 uppercase tracking-wide">TV Show</span>
+                    <span id="pick-item-priority-badge" class="text-[10px] text-red-500 font-bold">🔥 High Priority</span>
+                </div>
+                <p id="pick-item-notes" class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed italic line-clamp-3">"Notes and short descriptions go here."</p>
+            </div>
+            <div class="flex gap-3 w-full mt-2">
+                <button onclick="closePickModal()" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl transition-all">Close</button>
+                <button id="pick-start-btn" onclick="startPickedItem()" class="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center justify-center gap-1.5">Start Watching/Playing <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CLOUD CONFIGURATION OVERLAY -->
+    <div id="cloud-modal" class="fixed inset-0 z-50 overflow-y-auto hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col">
+            <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-950/20">
+                <div>
+                    <h3 class="text-md font-extrabold flex items-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-up text-brand-500"></i> Cloud Sync Account Settings
+                    </h3>
+                    <p class="text-[10px] text-slate-400 font-semibold uppercase mt-0.5 tracking-wide">Backup & Sync your backlog across all devices</p>
+                </div>
+                <button onclick="closeCloudModal()" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto flex flex-col gap-5">
+                <!-- Sync status display -->
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-150 dark:border-slate-850 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div id="cloud-indicator-circle" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-cloud"></i>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Connection Status</span>
+                            <p id="cloud-connection-badge" class="text-xs font-bold text-slate-600 dark:text-slate-300">Local Storage Active</p>
+                        </div>
+                    </div>
+                    <button id="logout-btn" onclick="signOutAccount()" class="hidden px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-xs font-semibold rounded-lg transition-all">
+                        Sign Out
+                    </button>
+                </div>
+
+                <!-- Custom credentials setup instructions -->
+                <div class="p-4 rounded-xl bg-brand-500/5 dark:bg-brand-500/10 border border-brand-500/10 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                    <p class="font-bold text-brand-700 dark:text-brand-300 mb-1 flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-info"></i> Sync Information
+                    </p>
+                    Your watchlists are stored safely inside your browser memory. For complete cross-device backup, login via Firebase below.
+                </div>
+
+                <!-- Account Credentials Form -->
+                <div id="account-auth-form" class="flex flex-col gap-4">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Account Credentials</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Email Address</label>
+                            <input type="email" id="auth-email" placeholder="you@domain.com" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs focus:ring-1 focus:ring-brand-500">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Password</label>
+                            <input type="password" id="auth-password" placeholder="Min. 6 characters" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs focus:ring-1 focus:ring-brand-500">
+                        </div>
+                    </div>
+                    <div class="flex gap-3 mt-2">
+                        <button onclick="handleAuthAction('login')" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl transition-all shadow-md">Sign In</button>
+                        <button onclick="handleAuthAction('register')" class="flex-1 py-2.5 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs rounded-xl transition-all">Sign Up</button>
+                    </div>
+                </div>
+
+                <!-- Custom database connection setting -->
+                <div class="border-t border-slate-100 dark:border-slate-800 pt-4 flex flex-col gap-3">
+                    <button onclick="document.getElementById('custom-db-inputs').classList.toggle('hidden')" class="text-left text-xs text-brand-500 font-bold hover:underline flex items-center justify-between">
+                        <span>Configure Personal Firebase Database</span>
+                        <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                    </button>
+                    <div id="custom-db-inputs" class="hidden flex flex-col gap-3 mt-1.5">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Paste your Web FirebaseConfig Credentials Object</label>
+                        <textarea id="firebase-config-input" rows="5" placeholder='{&#10;  "apiKey": "AIzaSy...",&#10;  "authDomain": "...",&#10;  "projectId": "...",&#10;  "storageBucket": "...",&#10;  "messagingSenderId": "...",&#10;  "appId": "..."&#10;}' class="w-full p-3 font-mono text-[10px] rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:ring-1 focus:ring-brand-500"></textarea>
+                        <button onclick="saveCustomFirebaseConfig()" class="py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all shadow-md">Apply DB Settings</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex justify-end">
+                <button onclick="closeCloudModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">Close Panel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE CONFIRMATION MODAL (No native JS confirms allowed) -->
+    <div id="delete-modal" class="fixed inset-0 z-50 overflow-y-auto hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-sm shadow-2xl border border-slate-100 dark:border-slate-800 p-6 flex flex-col items-center text-center gap-4">
+            <div class="w-14 h-14 rounded-full bg-red-100 dark:bg-red-900/30 text-red-500 flex items-center justify-center text-2xl">
+                <i class="fa-solid fa-trash-can"></i>
+            </div>
+            <div>
+                <h3 class="text-md font-extrabold text-slate-800 dark:text-white">Delete Item?</h3>
+                <p class="text-xs text-slate-400 mt-1 font-semibold">Are you sure you want to remove this from your list? This cannot be undone.</p>
+            </div>
+            <div class="flex gap-3 w-full mt-2">
+                <button onclick="closeDeleteModal()" class="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl transition-all">Cancel</button>
+                <button id="delete-confirm-btn" class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-red-500/10 transition-all">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM NOTIFICATION SYSTEM (TOASTS) -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none max-w-sm w-full px-4 sm:px-0"></div>
+
+    <!-- FIREBASE AND CORE BUSINESS LOGIC MODULE -->
+    <script type="module">
+        // Import Google Firebase CDN components
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, writeBatch, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // State management
+        let localDb = JSON.parse(localStorage.getItem('omnishelf_watchlist')) || [];
+        let viewMode = localStorage.getItem('omnishelf_view_mode') || 'grid';
+        let isDarkMode = localStorage.getItem('omnishelf_dark_mode') === 'true';
+
+        let firebaseApp = null;
+        let db = null;
+        let auth = null;
+        let unsubscribeSnapshots = null;
+        let activeUserId = null;
+
+        // Active app constants
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'omnishelf-default-app';
+
+        // Sync local mutations with persistent cookies or databases
+        function saveLocalDbToDisk() {
+            localStorage.setItem('omnishelf_watchlist', JSON.stringify(localDb));
+            if (!auth || !auth.currentUser) {
+                renderItems();
+            }
+        }
+
+        // Attempt dynamically configuring cloud database client
+        function initFirebase(config) {
+            try {
+                if (unsubscribeSnapshots) {
+                    unsubscribeSnapshots();
+                    unsubscribeSnapshots = null;
+                }
+
+                firebaseApp = initializeApp(config);
+                db = getFirestore(firebaseApp);
+                auth = getAuth(firebaseApp);
+
+                // Authentication change observer
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        activeUserId = user.uid;
+                        showToast(`Connected successfully as: ${user.email || 'Anonymous'}`, 'success');
+                        
+                        // Sync status badge updates
+                        updateCloudUIStatus(true, user.email || 'Cloud Active');
+                        
+                        // Subscribe to live Firestore changes (RULE 1: STRICT PATH)
+                        const cloudCollectionPath = `artifacts/${appId}/users/${activeUserId}/media_items`;
+                        const cloudRef = collection(db, 'artifacts', appId, 'users', activeUserId, 'media_items');
+                        
+                        // Fetch initially & stream (No complex where query, satisfying RULE 2)
+                        unsubscribeSnapshots = onSnapshot(cloudRef, (snapshot) => {
+                            const cloudItems = [];
+                            snapshot.forEach((doc) => {
+                                cloudItems.push({ id: doc.id, ...doc.data() });
+                            });
+                            
+                            // Merge/update local cache with live database
+                            localDb = cloudItems;
+                            renderItems();
+                        }, (error) => {
+                            console.error("Firestore snapshot failure: ", error);
+                            showToast("Firestore query error. Using offline fallback.", "error");
+                        });
+                    } else {
+                        activeUserId = null;
+                        updateCloudUIStatus(false, 'Local Only');
+                        localDb = JSON.parse(localStorage.getItem('omnishelf_watchlist')) || [];
+                        renderItems();
+                    }
+                });
+
+                return true;
+            } catch (err) {
+                console.error("Firebase config failed: ", err);
+                showToast("Could not load cloud connection settings.", "error");
+                updateCloudUIStatus(false, 'Offline Sandbox');
+                return false;
+            }
+        }
+
+        // Auto-bootstrap cloud connection if cached credentials exist
+        const cachedConfig = localStorage.getItem('omnishelf_firebase_config');
+        if (cachedConfig) {
+            try {
+                const parsedConfig = JSON.parse(cachedConfig);
+                initFirebase(parsedConfig);
+            } catch (e) {
+                localStorage.removeItem('omnishelf_firebase_config');
+            }
+        }
+
+        window.saveCustomFirebaseConfig = function() {
+            const rawConfig = document.getElementById('firebase-config-input').value.trim();
+            if (!rawConfig) {
+                showToast("Please paste a valid JSON config first!", "error");
+                return;
+            }
+            try {
+                const cleanConfig = JSON.parse(rawConfig);
+                const success = initFirebase(cleanConfig);
+                if (success) {
+                    localStorage.setItem('omnishelf_firebase_config', rawConfig);
+                    showToast("Custom database configured and active!", "success");
+                }
+            } catch (err) {
+                showToast("Invalid JSON markup. Check details and try again.", "error");
+            }
+        }
+
+        // Sign Up and Sign In flow handler
+        window.handleAuthAction = async function(mode) {
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value.trim();
+
+            if (!email || !password) {
+                showToast("Please specify both email and password.", "error");
+                return;
+            }
+            if (!auth) {
+                showToast("Activate your Database custom config or use local mode.", "error");
+                return;
+            }
+
+            try {
+                if (mode === 'register') {
+                    showToast("Creating fresh account...", "info");
+                    await createUserWithEmailAndPassword(auth, email, password);
+                    showToast("Account created! Uploading existing data...", "success");
+                    // Sync initial offline local backlog up to the cloud
+                    if (localDb.length > 0 && activeUserId) {
+                        const batchRef = collection(db, 'artifacts', appId, 'users', activeUserId, 'media_items');
+                        for (const item of localDb) {
+                            await setDoc(doc(db, 'artifacts', appId, 'users', activeUserId, 'media_items', item.id), item);
+                        }
+                    }
+                } else {
+                    showToast("Signing in...", "info");
+                    await signInWithEmailAndPassword(auth, email, password);
+                }
+                closeCloudModal();
+            } catch (err) {
+                console.error(err);
+                showToast(`Auth Failed: ${err.message}`, "error");
+            }
+        }
+
+        window.signOutAccount = async function() {
+            if (auth) {
+                await signOut(auth);
+                showToast("Signed out successfully.", "success");
+            }
+            closeCloudModal();
+        }
+
+        function updateCloudUIStatus(isConnected, labelText) {
+            const statusBtn = document.getElementById('cloud-status-btn');
+            const statusText = document.getElementById('cloud-status-text');
+            const circle = document.getElementById('cloud-indicator-circle');
+            const connectionBadge = document.getElementById('cloud-connection-badge');
+            const footerStatus = document.getElementById('footer-connection-status');
+            const logoutBtn = document.getElementById('logout-btn');
+
+            if (isConnected) {
+                statusBtn.classList.remove('bg-slate-100', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-300');
+                statusBtn.classList.add('bg-emerald-500/10', 'text-emerald-600', 'dark:text-emerald-400');
+                statusText.innerText = "Synced";
+                circle.className = "w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-500 flex items-center justify-center text-lg";
+                connectionBadge.className = "text-xs font-bold text-emerald-600 dark:text-emerald-400";
+                connectionBadge.innerText = labelText;
+                footerStatus.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>Cloud Vault Live`;
+                logoutBtn.classList.remove('hidden');
+                document.getElementById('account-auth-form').classList.add('hidden');
+            } else {
+                statusBtn.classList.add('bg-slate-100', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-300');
+                statusBtn.classList.remove('bg-emerald-500/10', 'text-emerald-600', 'dark:text-emerald-400');
+                statusText.innerText = labelText;
+                circle.className = "w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center text-lg";
+                connectionBadge.className = "text-xs font-bold text-slate-500 dark:text-slate-400";
+                connectionBadge.innerText = "Offline (Local Storage)";
+                footerStatus.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-slate-400 mr-1.5 animate-pulse"></span>Local Device Backup`;
+                logoutBtn.classList.add('hidden');
+                document.getElementById('account-auth-form').classList.remove('hidden');
+            }
+        }
+
+        // Control light vs dark styling across HTML headers
+        window.toggleDarkMode = function() {
+            isDarkMode = !isDarkMode;
+            localStorage.setItem('omnishelf_dark_mode', isDarkMode);
+            applyTheme();
+        }
+
+        function applyTheme() {
+            const root = document.documentElement;
+            const themeIcon = document.getElementById('theme-icon');
+            if (isDarkMode) {
+                root.classList.add('dark');
+                themeIcon.className = "fa-solid fa-sun";
+            } else {
+                root.classList.remove('dark');
+                themeIcon.className = "fa-solid fa-moon";
+            }
+        }
+        applyTheme();
+
+        // Filter, sort, and render backlog items to screen
+        window.renderItems = function() {
+            const container = document.getElementById('media-container');
+            const searchVal = document.getElementById('search-bar').value.toLowerCase().trim();
+            const filterType = document.getElementById('filter-type').value;
+            const filterStatus = document.getElementById('filter-status').value;
+
+            // Update Header Stats
+            document.getElementById('stat-movies').innerText = localDb.filter(i => i.type === 'movie').length;
+            document.getElementById('stat-tv').innerText = localDb.filter(i => i.type === 'tv').length;
+            document.getElementById('stat-games').innerText = localDb.filter(i => i.type === 'game').length;
+            document.getElementById('stat-music').innerText = localDb.filter(i => i.type === 'music').length;
+
+            // Apply Filters (In JavaScript Memory, satisfying RULE 2)
+            let filtered = localDb.filter(item => {
+                const matchesSearch = item.title.toLowerCase().includes(searchVal) || 
+                                      (item.notes && item.notes.toLowerCase().includes(searchVal)) || 
+                                      (item.tags && item.tags.toLowerCase().includes(searchVal)) || 
+                                      (item.creator && item.creator.toLowerCase().includes(searchVal));
+                
+                const matchesType = filterType === 'all' || item.type === filterType;
+                const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
+
+                return matchesSearch && matchesType && matchesStatus;
+            });
+
+            // Sorting: Priority high-to-low, then title
+            filtered.sort((a, b) => {
+                const pA = parseInt(a.priority || 2);
+                const pB = parseInt(b.priority || 2);
+                if (pA !== pB) return pB - pA;
+                return a.title.localeCompare(b.title);
+            });
+
+            if (filtered.length === 0) {
+                container.className = "flex flex-col items-center justify-center min-h-[300px] col-span-full gap-3";
+                container.innerHTML = `
+                    <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-400 flex items-center justify-center text-2xl">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                    <div class="text-center">
+                        <p class="font-bold text-slate-700 dark:text-slate-300">No items found</p>
+                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Try adjusting search or click Add Item above!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // GRID OR LIST VIEW GENERATION
+            if (viewMode === 'grid') {
+                container.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 min-h-[300px]";
+                container.innerHTML = filtered.map(item => {
+                    const statusClass = item.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' :
+                                        item.status === 'In Progress' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' :
+                                        'bg-slate-150 dark:bg-slate-800 text-slate-500 dark:text-slate-400';
+
+                    const priorityBadge = item.priority === "3" ? "🔥 High" : item.priority === "1" ? "💤 Low" : "⚡ Medium";
+                    const priorityClass = item.priority === "3" ? "text-red-500" : item.priority === "1" ? "text-slate-400" : "text-amber-500";
+
+                    // Dynamic detail tags
+                    let specificDetail = '';
+                    if (item.type === 'movie' && item.creator) {
+                        specificDetail = `<p class="text-[11px] text-slate-400 font-semibold truncate mt-0.5"><span class="text-[10px] text-slate-500">Directed by:</span> ${item.creator}</p>`;
+                    } else if (item.type === 'tv') {
+                        specificDetail = `<p class="text-[11px] text-slate-400 font-semibold mt-0.5"><span class="text-[10px] text-slate-500">Progress:</span> Season ${item.tvSeason || 1}, Ep ${item.tvEpisode || 1}</p>`;
+                    } else if (item.type === 'game') {
+                        specificDetail = `
+                            <div class="mt-2">
+                                <div class="flex justify-between text-[10px] font-bold text-slate-400 mb-1">
+                                    <span>${item.gamePlatform || 'All Platforms'}</span>
+                                    <span>${item.gameProgress || 0}%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 dark:bg-slate-850 h-1.5 rounded-full overflow-hidden">
+                                    <div class="bg-brand-500 h-full rounded-full transition-all" style="width: ${item.gameProgress || 0}%"></div>
+                                </div>
+                            </div>
+                        `;
+                    } else if (item.type === 'music') {
+                        specificDetail = `<p class="text-[11px] text-slate-400 font-semibold truncate mt-0.5"><span class="text-[10px] text-slate-500">By Artist:</span> ${item.creator || 'Unknown'}</p>`;
+                    }
+
+                    // Cover image fallback
+                    const imageUrl = item.image || `https://placehold.co/600x400/4f46e5/ffffff?text=${encodeURIComponent(item.title)}`;
+
+                    return `
+                        <div class="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:border-brand-500/30 transition-all duration-300 flex flex-col h-full relative">
+                            <!-- Image / Art Poster -->
+                            <div class="relative aspect-[4/3] bg-slate-100 dark:bg-slate-950 overflow-hidden flex items-center justify-center">
+                                <img src="${imageUrl}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="${item.title}" onerror="this.src='https://placehold.co/600x400/4f46e5/ffffff?text=${encodeURIComponent(item.title)}'">
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent"></div>
+                                
+                                <!-- Category Icon Badge -->
+                                <div class="absolute top-3 left-3 w-8 h-8 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm text-slate-700 dark:text-slate-300 flex items-center justify-center shadow-md">
+                                    ${item.type === 'movie' ? '<i class="fa-solid fa-clapperboard text-blue-500"></i>' :
+                                      item.type === 'tv' ? '<i class="fa-solid fa-tv text-purple-500"></i>' :
+                                      item.type === 'game' ? '<i class="fa-solid fa-gamepad text-emerald-500"></i>' :
+                                      '<i class="fa-solid fa-music text-pink-500"></i>'}
+                                </div>
+
+                                <!-- Priority Tag -->
+                                <span class="absolute top-3 right-3 px-2 py-0.5 rounded-lg bg-black/60 text-[9px] font-extrabold ${priorityClass} backdrop-blur-sm uppercase tracking-wider">
+                                    ${priorityBadge}
+                                </span>
+                            </div>
+
+                            <!-- Detail Content Box -->
+                            <div class="p-4 flex flex-col flex-grow justify-between gap-3">
+                                <div>
+                                    <div class="flex items-start justify-between gap-2">
+                                        <h4 class="font-bold text-sm text-slate-800 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-all line-clamp-1">${item.title}</h4>
+                                        ${item.year ? `<span class="text-[10px] text-slate-400 font-extrabold">${item.year}</span>` : ''}
+                                    </div>
+                                    
+                                    ${specificDetail}
+
+                                    <p class="text-xs text-slate-400 dark:text-slate-500 line-clamp-2 italic mt-1.5 leading-relaxed">
+                                        "${item.notes || 'No description or summary saved yet.'}"
+                                    </p>
+                                </div>
+
+                                <!-- Card Control footer -->
+                                <div class="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80 pt-3 mt-1.5">
+                                    <span class="px-2.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${statusClass}">
+                                        ${item.status}
+                                    </span>
+                                    <div class="flex gap-2">
+                                        <button onclick="editItem('${item.id}')" class="p-2 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-brand-500 hover:bg-brand-500/10 rounded-xl transition-all" title="Edit details">
+                                            <i class="fa-solid fa-pen text-xs"></i>
+                                        </button>
+                                        <button onclick="triggerDelete('${item.id}')" class="p-2 bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all" title="Delete entry">
+                                            <i class="fa-solid fa-trash-can text-xs"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                // RENDER LIST TABLE VIEW
+                container.className = "block w-full overflow-x-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm col-span-full";
+                container.innerHTML = `
+                    <table class="min-w-full divide-y divide-slate-100 dark:divide-slate-800 text-left text-xs text-slate-500 dark:text-slate-400">
+                        <thead class="bg-slate-55/60 dark:bg-slate-950/20 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                            <tr>
+                                <th scope="col" class="px-6 py-4">Title & Format</th>
+                                <th scope="col" class="px-6 py-4">Release Year</th>
+                                <th scope="col" class="px-6 py-4">Creator / Platform</th>
+                                <th scope="col" class="px-6 py-4">Priority</th>
+                                <th scope="col" class="px-6 py-4">Status</th>
+                                <th scope="col" class="px-6 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-semibold text-slate-600 dark:text-slate-300">
+                            ${filtered.map(item => {
+                                const categoryIcon = item.type === 'movie' ? '🎥' : item.type === 'tv' ? '📺' : item.type === 'game' ? '🎮' : '🎵';
+                                const priorityBadge = item.priority === "3" ? "🔥 High" : item.priority === "1" ? "💤 Low" : "⚡ Medium";
+                                return `
+                                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-all">
+                                        <td class="px-6 py-4 flex items-center gap-3">
+                                            <span class="text-base">${categoryIcon}</span>
+                                            <div>
+                                                <p class="font-bold text-slate-800 dark:text-white">${item.title}</p>
+                                                <p class="text-[10px] text-slate-400 font-medium">${item.type.toUpperCase()}</p>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">${item.year || 'N/A'}</td>
+                                        <td class="px-6 py-4 truncate max-w-[150px]">${item.creator || item.gamePlatform || 'N/A'}</td>
+                                        <td class="px-6 py-4 font-bold text-slate-500">${priorityBadge}</td>
+                                        <td class="px-6 py-4">
+                                            <span class="px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${item.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-600' : item.status === 'In Progress' ? 'bg-amber-500/10 text-amber-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}">
+                                                ${item.status}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <div class="flex gap-2 justify-end">
+                                                <button onclick="editItem('${item.id}')" class="p-2 hover:bg-brand-500/10 hover:text-brand-500 rounded-lg transition-all"><i class="fa-solid fa-pen"></i></button>
+                                                <button onclick="triggerDelete('${item.id}')" class="p-2 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all"><i class="fa-solid fa-trash-can"></i></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
+        }
+
+        // Toggles display setups in memory instantly
+        window.setViewMode = function(mode) {
+            viewMode = mode;
+            localStorage.setItem('omnishelf_view_mode', mode);
+            
+            const gridBtn = document.getElementById('view-grid-btn');
+            const listBtn = document.getElementById('view-list-btn');
+
+            if (mode === 'grid') {
+                gridBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white dark:bg-slate-900 shadow-sm text-brand-600 dark:text-brand-400";
+                listBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-500 hover:text-slate-700 dark:hover:text-slate-300";
+            } else {
+                listBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white dark:bg-slate-900 shadow-sm text-brand-600 dark:text-brand-400";
+                gridBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-500 hover:text-slate-700 dark:hover:text-slate-300";
+            }
+            renderItems();
+        }
+
+        // Shows and hides the modal container layers safely
+        window.openFormModal = function() {
+            document.getElementById('item-id').value = '';
+            document.getElementById('media-form').reset();
+            document.getElementById('item-image').value = '';
+            document.getElementById('game-progress-label').innerText = '0%';
+            document.getElementById('modal-title').innerText = "Add New Entry";
+            toggleMediaFields();
+
+            const modal = document.getElementById('item-modal');
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        window.closeFormModal = function() {
+            const modal = document.getElementById('item-modal');
+            modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        window.openCloudModal = function() {
+            document.getElementById('cloud-modal').classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        window.closeCloudModal = function() {
+            document.getElementById('cloud-modal').classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        window.openAutofillModal = function() {
+            document.getElementById('autofill-modal').classList.remove('hidden');
+        }
+
+        window.closeAutofillModal = function() {
+            document.getElementById('autofill-modal').classList.add('hidden');
+        }
+
+        window.openPickModal = function() {
+            document.getElementById('pick-modal').classList.remove('hidden');
+        }
+
+        window.closePickModal = function() {
+            document.getElementById('pick-modal').classList.add('hidden');
+        }
+
+        window.closeDeleteModal = function() {
+            document.getElementById('delete-modal').classList.add('hidden');
+        }
+
+        // Form field context-aware toggle handlers
+        window.toggleMediaFields = function() {
+            const type = document.getElementById('item-type').value;
+            document.getElementById('fields-movie').classList.add('hidden');
+            document.getElementById('fields-tv').classList.add('hidden');
+            document.getElementById('fields-game').classList.add('hidden');
+            document.getElementById('fields-music').classList.add('hidden');
+
+            document.getElementById(`fields-${type}`).classList.remove('hidden');
+        }
+
+        // Inserts or updates a targeted wishlist entry
+        window.saveItem = async function(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('item-id').value || crypto.randomUUID();
+            const type = document.getElementById('item-type').value;
+            const title = document.getElementById('item-title').value.trim();
+            const status = document.getElementById('item-status').value;
+            const priority = document.getElementById('item-priority').value;
+            const year = parseInt(document.getElementById('item-year').value) || null;
+            const notes = document.getElementById('item-notes').value.trim();
+            const tags = document.getElementById('item-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+            const image = document.getElementById('item-image').value;
+
+            const itemData = {
+                id,
+                type,
+                title,
+                status,
+                priority,
+                year,
+                notes,
+                tags,
+                image,
+                lastUpdated: Date.now()
+            };
+
+            // Capture field conditions
+            if (type === 'movie') {
+                itemData.creator = document.getElementById('movie-director').value.trim();
+                itemData.movieRuntime = parseInt(document.getElementById('movie-runtime').value) || null;
+            } else if (type === 'tv') {
+                itemData.tvSeason = parseInt(document.getElementById('tv-season').value) || 1;
+                itemData.tvEpisode = parseInt(document.getElementById('tv-episode').value) || 1;
+            } else if (type === 'game') {
+                itemData.gamePlatform = document.getElementById('game-platform').value.trim();
+                itemData.gameProgress = parseInt(document.getElementById('game-progress').value) || 0;
+            } else if (type === 'music') {
+                itemData.creator = document.getElementById('music-artist').value.trim();
+                itemData.musicFormat = document.getElementById('music-format').value.trim();
+            }
+
+            try {
+                if (auth && auth.currentUser) {
+                    // Save to Firestore (RULE 1: STRICT PATH)
+                    const docRef = doc(db, 'artifacts', appId, 'users', activeUserId, 'media_items', id);
+                    await setDoc(docRef, itemData);
+                } else {
+                    // Local fallback storage
+                    const idx = localDb.findIndex(item => item.id === id);
+                    if (idx > -1) {
+                        localDb[idx] = itemData;
+                    } else {
+                        localDb.push(itemData);
+                    }
+                    saveLocalDbToDisk();
+                }
+
+                showToast(`Successfully saved: "${title}"`, "success");
+                closeFormModal();
+            } catch (err) {
+                console.error(err);
+                showToast("Failed to write details to database storage.", "error");
+            }
+        }
+
+        // Retrieves cached data fields for modification inside the modal
+        window.editItem = function(id) {
+            const item = localDb.find(i => i.id === id);
+            if (!item) return;
+
+            document.getElementById('item-id').value = item.id;
+            document.getElementById('item-type').value = item.type;
+            document.getElementById('item-title').value = item.title;
+            document.getElementById('item-status').value = item.status;
+            document.getElementById('item-priority').value = item.priority;
+            document.getElementById('item-year').value = item.year || '';
+            document.getElementById('item-notes').value = item.notes || '';
+            document.getElementById('item-tags').value = (item.tags || []).join(', ');
+            document.getElementById('item-image').value = item.image || '';
+
+            toggleMediaFields();
+
+            if (item.type === 'movie') {
+                document.getElementById('movie-director').value = item.creator || '';
+                document.getElementById('movie-runtime').value = item.movieRuntime || '';
+            } else if (item.type === 'tv') {
+                document.getElementById('tv-season').value = item.tvSeason || 1;
+                document.getElementById('tv-episode').value = item.tvEpisode || 1;
+            } else if (item.type === 'game') {
+                document.getElementById('game-platform').value = item.gamePlatform || '';
+                document.getElementById('game-progress').value = item.gameProgress || 0;
+                document.getElementById('game-progress-label').innerText = `${item.gameProgress || 0}%`;
+            } else if (item.type === 'music') {
+                document.getElementById('music-artist').value = item.creator || '';
+                document.getElementById('music-format').value = item.musicFormat || '';
+            }
+
+            document.getElementById('modal-title').innerText = "Edit Details";
+            
+            const modal = document.getElementById('item-modal');
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        // Triggers safe confirmation modals instead of prompt sheets
+        window.triggerDelete = function(id) {
+            const item = localDb.find(i => i.id === id);
+            if (!item) return;
+
+            const confirmBtn = document.getElementById('delete-confirm-btn');
+            confirmBtn.onclick = async () => {
+                try {
+                    if (auth && auth.currentUser) {
+                        // Delete from Firestore (RULE 1: STRICT PATH)
+                        const docRef = doc(db, 'artifacts', appId, 'users', activeUserId, 'media_items', id);
+                        await deleteDoc(docRef);
+                    } else {
+                        localDb = localDb.filter(i => i.id !== id);
+                        saveLocalDbToDisk();
+                    }
+                    showToast(`Removed "${item.title}" from watchlist.`, "success");
+                    closeDeleteModal();
+                } catch (e) {
+                    showToast("Failed to delete database record.", "error");
+                }
+            };
+
+            document.getElementById('delete-modal').classList.remove('hidden');
+        }
+
+        // Smart randomized item picker to fight backlog overload
+        window.triggerPickForMe = function() {
+            // Find high or medium priority items not yet completed
+            const uncompletedBacklog = localDb.filter(item => item.status !== 'Completed' && parseInt(item.priority || 2) >= 2);
+            
+            if (uncompletedBacklog.length === 0) {
+                showToast("Create some High or Medium priority 'Not Started/In Progress' items first!", "info");
+                return;
+            }
+
+            const selection = uncompletedBacklog[Math.floor(Math.random() * uncompletedBacklog.length)];
+            
+            document.getElementById('pick-item-title').innerText = selection.title;
+            document.getElementById('pick-item-creator').innerText = selection.creator ? `By: ${selection.creator}` : 'Details not specified';
+            document.getElementById('pick-item-type-badge').innerText = selection.type.toUpperCase();
+            
+            const priorityBadge = document.getElementById('pick-item-priority-badge');
+            priorityBadge.innerText = selection.priority === "3" ? "🔥 High Priority" : "⚡ Medium Priority";
+            
+            document.getElementById('pick-item-notes').innerText = selection.notes || 'No description provided yet.';
+
+            const startBtn = document.getElementById('pick-start-btn');
+            startBtn.onclick = async () => {
+                selection.status = "In Progress";
+                if (auth && auth.currentUser) {
+                    const docRef = doc(db, 'artifacts', appId, 'users', activeUserId, 'media_items', selection.id);
+                    await setDoc(docRef, selection);
+                } else {
+                    saveLocalDbToDisk();
+                }
+                showToast(`Started: "${selection.title}"! Enjoy!`, "success");
+                closePickModal();
+            };
+
+            openPickModal();
+        }
+
+        // Performs search-grounded lookups using the Gemini API and parses JSON results securely
+        window.triggerAiAutofill = async function() {
+            const title = document.getElementById('item-title').value.trim();
+            const type = document.getElementById('item-type').value;
+
+            if (!title) {
+                showToast("Please enter a Title first so the AI can search it!", "error");
+                return;
+            }
+
+            const autofillBtn = document.getElementById('ai-autofill-btn');
+            const originalContent = autofillBtn.innerHTML;
+            
+            autofillBtn.disabled = true;
+            autofillBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Searching...`;
+            showToast(`Searching online database for matches...`, "info");
+
+            try {
+                const apiKey = ""; // Injected automatically by server
+                const metaUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                const systemPrompt = `You are an elite media researcher. Use Google Search to query real-world metadata for the given title and type. 
+                Identify the 3 most likely matching options. You MUST return a raw valid JSON array.
+                DO NOT include any conversational text, explanations, or codeblock wraps like "\`\`\`json". Just output the JSON array.
+
+                JSON Array Format:
+                [
+                  {
+                    "title": "Official Title Name",
+                    "description": "Short beautifully formatted 2-sentence plot synopsis.",
+                    "year": 2024,
+                    "creator": "Director, developer, or primary musical artist",
+                    "extraDetail": "Format/Platform details",
+                    "numericSpec": 120
+                  }
+                ]`;
+                const userQuery = `Search real matches for the ${type}: "${title}". Find accurate release year and creators. Provide unique plot details.`;
+
+                const metaPayload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    tools: [{ "google_search": {} }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: {
+                        responseMimeType: "application/json"
+                    }
+                };
+
+                const metaResponse = await fetch(metaUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(metaPayload)
+                });
+
+                if (!metaResponse.ok) throw new Error("Metadata API request failed");
+                const metaResult = await metaResponse.json();
+                
+                let matches = [];
+                const rawText = metaResult.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (rawText) {
+                    try {
+                        let parsedText = rawText.trim();
+                        // Clean markdown json fences just in case
+                        const jsonMatch = parsedText.match(/\[\s*\{[\s\S]*\}\s*\]/);
+                        if (jsonMatch) {
+                            parsedText = jsonMatch[0];
+                        }
+                        matches = JSON.parse(parsedText);
+                    } catch (e) {
+                        console.error("Autofill parse error: ", e);
+                    }
+                }
+
+                if (!Array.isArray(matches) || matches.length === 0) {
+                    showToast("No accurate results found. Please complete the form manually.", "error");
+                    return;
+                }
+
+                // Render options
+                const choicesContainer = document.getElementById('autofill-choices');
+                choicesContainer.innerHTML = '';
+
+                matches.forEach((candidate) => {
+                    const choiceBtn = document.createElement('button');
+                    choiceBtn.type = "button";
+                    choiceBtn.className = "w-full text-left p-3.5 rounded-xl border border-slate-250 dark:border-slate-800 hover:border-brand-500 dark:hover:border-brand-500 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all flex flex-col gap-1";
+                    
+                    choiceBtn.innerHTML = `
+                        <div class="flex justify-between items-start gap-2">
+                            <span class="font-bold text-xs text-slate-800 dark:text-white">${candidate.title}</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[9px] font-extrabold text-slate-500">${candidate.year || 'N/A'}</span>
+                        </div>
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                            By/Platform: ${candidate.creator || 'Unknown'}
+                        </div>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 line-clamp-2 mt-1 italic">"${candidate.description}"</p>
+                    `;
+
+                    // Choice selection handler
+                    choiceBtn.onclick = async () => {
+                        closeAutofillModal();
+                        showToast(`Applying "${candidate.title}" details...`, "info");
+
+                        document.getElementById('item-title').value = candidate.title;
+                        document.getElementById('item-notes').value = candidate.description;
+                        if (candidate.year) document.getElementById('item-year').value = candidate.year;
+
+                        if (type === 'movie') {
+                            document.getElementById('movie-director').value = candidate.creator || '';
+                            if (candidate.numericSpec) document.getElementById('movie-runtime').value = candidate.numericSpec;
+                        } else if (type === 'tv') {
+                            if (candidate.numericSpec) document.getElementById('tv-season').value = candidate.numericSpec;
+                            document.getElementById('tv-episode').value = 1;
+                        } else if (type === 'game') {
+                            document.getElementById('game-platform').value = candidate.extraDetail || candidate.creator || '';
+                        } else if (type === 'music') {
+                            document.getElementById('music-artist').value = candidate.creator || '';
+                            if (candidate.extraDetail) document.getElementById('music-format').value = candidate.extraDetail;
+                        }
+
+                        // Trigger artwork generation (imagen-4.0-generate-001)
+                        try {
+                            showToast("Customizing cover art design...", "info");
+                            const imageUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
+                            const imagePrompt = `Sleek, premium, minimalist vector graphic poster cover design for the ${type} "${candidate.title}". Cinematic composition, professional clean solid graphic illustration, gorgeous color scheme.`;
+
+                            const imagePayload = {
+                                instances: { prompt: imagePrompt },
+                                parameters: { "sampleCount": 1 }
+                            };
+
+                            const imageResponse = await fetch(imageUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(imagePayload)
+                            });
+
+                            if (imageResponse.ok) {
+                                const imageResult = await imageResponse.json();
+                                if (imageResult?.predictions?.[0]?.bytesBase64Encoded) {
+                                    const base64Image = `data:image/png;base64,${imageResult.predictions[0].bytesBase64Encoded}`;
+                                    document.getElementById('item-image').value = base64Image;
+                                    showToast("Cover art customized successfully!", "success");
+                                }
+                            } else {
+                                document.getElementById('item-image').value = `https://placehold.co/600x400/4f46e5/ffffff?text=${encodeURIComponent(candidate.title)}`;
+                                showToast("Details updated. Generative art skipped (fallback set).", "success");
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            document.getElementById('item-image').value = `https://placehold.co/600x400/4f46e5/ffffff?text=${encodeURIComponent(candidate.title)}`;
+                        }
+                    };
+
+                    choicesContainer.appendChild(choiceBtn);
+                });
+
+                openAutofillModal();
+                showToast("Matches found! Choose the correct result from the dialog.", "success");
+
+            } catch (err) {
+                console.error("Autofill failure: ", err);
+                showToast("Could not contact lookups. Check parameters.", "error");
+            } finally {
+                autofillBtn.disabled = false;
+                autofillBtn.innerHTML = originalContent;
+            }
+        }
+
+        // Lightweight event toasts that slide up on screen
+        window.showToast = function(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const bgClass = type === 'success' ? 'bg-emerald-500' : type === 'error' ? 'bg-red-500' : 'bg-slate-800 dark:bg-slate-700';
+            const iconClass = type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-triangle-exclamation' : 'fa-circle-info';
+
+            toast.className = `flex items-center gap-3 px-4 py-3 text-white text-xs font-bold rounded-xl shadow-lg transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto ${bgClass}`;
+            toast.innerHTML = `
+                <i class="fa-solid ${iconClass} text-sm"></i>
+                <span class="flex-1">${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            // Reflow trigger
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            // Automatic removal timer
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3500);
+        }
+
+        // INITIAL LOAD SYSTEM BOOT
+        renderItems();
+    </script>
+</body>
+</html>
